@@ -92,18 +92,19 @@
             padding: 50px 16px 90px 16px;
         }
 
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+        }
+
+        .header-buttons-group {
+            display: flex;
+            gap: 6px;
         }
 
         .hints-counter-badge {
@@ -119,15 +120,18 @@
             gap: 4px;
         }
 
-        .btn-rules-top {
+        .btn-header-action {
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--border);
             color: #FFF;
-            padding: 6px 14px;
+            padding: 6px 10px;
             border-radius: 14px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .rounds-navigation {
@@ -323,7 +327,6 @@
             justify-content: center;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s;
         }
 
         .vip-unlocked-box {
@@ -444,6 +447,36 @@
         }
         .rules-item { font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: #E2E8F0; }
 
+        /* סגנון למסך הגדרות והתראות */
+        .setting-toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .setting-info { display: flex; flex-direction: column; gap: 2px; }
+        .setting-title-txt { font-size: 13px; font-weight: 700; color: #FFF; }
+        .setting-desc-txt { font-size: 11px; color: var(--muted); }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #1F2C3F; border-radius: 24px; transition: .3s;
+        }
+        .toggle-slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; border-radius: 50%; transition: .3s;
+        }
+        input:checked + .toggle-slider { background-color: var(--accent); }
+        input:checked + .toggle-slider:before { transform: translateX(20px); }
+
         .price-option-box {
             background: rgba(255,255,255,0.02);
             border: 1px solid var(--border);
@@ -537,20 +570,80 @@
                 <button class="btn-close-modal" onclick="closeModal('rules-modal')">&times;</button>
             </div>
             
-            <div class="rules-group-title">🏆 שלב 1: שיטת הניקוד בשלב הבתים</div>
-            <div class="rules-item">פגיעה בתוצאה מדויקת מעניקה 3 נקודות מלאות (לדוגמה: ניחשת 1-2 והמשחק הסתיים ב-1-2).</div>
-            <div class="rules-item">פגיעה בכיוון המשחק בלבד מעניקה נקודה 1.</div>
+            <div class="rules-group-title">🏆 שלב הבתים</div>
+            <div class="rules-item">תוצאה מדויקת: <strong>3 נקודות</strong></div>
+            <div class="rules-item">כיוון בלבד (מנצחת/תיקו): <strong>1 נקודה</strong></div>
             
-            <div class="rules-group-title">🔒 שלב 2: חוק הסודיות והנעילה</div>
+            <div class="rules-group-title">⚽ שמינית הגמר</div>
+            <div class="rules-item">תוצאה מדויקת: <strong>4 נקודות</strong></div>
+            <div class="rules-item">כיוון בלבד: <strong>2 נקודות</strong></div>
+
+            <div class="rules-group-title">🔥 רבע הגמר</div>
+            <div class="rules-item">תוצאה מדויקת: <strong>5 נקודות</strong></div>
+            <div class="rules-item">כיוון בלבד: <strong>3 נקודות</strong></div>
+
+            <div class="rules-group-title">🌟 חצי הגמר</div>
+            <div class="rules-item">תוצאה מדויקת: <strong>8 נקודות</strong></div>
+            <div class="rules-item">כיוון בלבד: <strong>4 נקודות</strong></div>
+
+            <div class="rules-group-title">👑 הגמר הגדול</div>
+            <div class="rules-item">תוצאה מדויקת: <strong>10 נקודות</strong></div>
+            <div class="rules-item">כיוון בלבד: <strong>5 נקודות</strong></div>
+            
+            <div class="rules-group-title">🔒 חוק הסודיות והנעילה</div>
+            <div class="rules-item">אף משתמש אינו יכול לצפות בניחושים של חברים שלו לפני שהמשחק מתחיל.</div>
             <div class="rules-item">כל הניחושים ננעלים ונחשפים יחד 5 דקות בדיוק לפני שריקת הפתיחה של כל משחק.</div>
 
-            <div class="rules-group-title">💡 שלב 3: המלצות VIP חכמות ומערכת ה-AI</div>
-            <div class="rules-item"><strong>🤖 המלצת AI:</strong> ניתוח חכם מבוסס מודל המחשב סיכויי הצלחה, כושר נוכחי וסטטיסטיקה יבשה.</div>
-            <div class="rules-item"><strong>📊 חוכמת ההמונים:</strong> ממוצע משוקלל וחי בזמן אמת של כלל ניחושי השחקנים הפעילים באפליקציה!</div>
+            <div class="rules-group-title">💎 מנוי הפרימיום</div>
+            <div class="rules-item">🤖 <strong>המלצת AI:</strong> ניתוח חכם מבוסס מודל המחשב סיכויי הצלחה, כושר נוכחי וסטטיסטיקה יבשה.</div>
+            <div class="rules-item">📊 <strong>חוכמת ההמונים:</strong> ממוצע משוקלל וחי בזמן אמת של כלל ניחושי השחקנים הפעילים באפליקציה!</div>
         </div>
     </div>
 
-    <!-- פופ-אפ רכישה -->
+    <!-- פופ-אפ הגדרות והתראות (חדש!) -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:#FFF;">⚙️ הגדרות והתראות</h3>
+                <button class="btn-close-modal" onclick="closeModal('settings-modal')">&times;</button>
+            </div>
+            
+            <div class="setting-toggle-row">
+                <div class="setting-info">
+                    <span class="setting-title-txt">התראות תזכורת לפני משחקים</span>
+                    <span class="setting-desc-txt">שלח לי תזכורת 30 דקות לפני שריקת הפתיחה למילוי ניחוש.</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="setting-info">
+                    <span class="setting-title-txt">עדכוני נקודות בלייב</span>
+                    <span class="setting-desc-txt">קבל התראת פוש מיידית לנייד עם סיום המשחק והניקוד שקיבלת.</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-toggle-row">
+                <div class="setting-info">
+                    <span class="setting-title-txt">התראות עקיפה בטבלה</span>
+                    <span class="setting-desc-txt">התראה במידה וחבר מהקבוצה עקף אותך בדירוג החי.</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- פופ-אפ חנות פרימיום מלאה -->
     <div class="modal-overlay" id="premium-store-modal">
         <div class="modal-card" style="border-color: var(--gold);">
             <div class="modal-header">
@@ -564,9 +657,17 @@
                 <div class="price-title">🚀 פרימיום כללי (כל משחקי הטורניר)</div>
                 <div class="price-val">60 ש"ח</div>
             </div>
+            <div class="price-option-box" onclick="buyBundle('10 המלצות')">
+                <div class="price-title">💎 חבילת 10 המלצות VIP</div>
+                <div class="price-val">25 ש"ח</div>
+            </div>
             <div class="price-option-box" onclick="buyBundle('5 המלצות')">
                 <div class="price-title">✨ חבילת 5 המלצות VIP</div>
                 <div class="price-val">15 ש"ח</div>
+            </div>
+            <div class="price-option-box" onclick="buyBundle('המלצה בודדת')">
+                <div class="price-title">⚽ המלצה למשחק בודד אחד</div>
+                <div class="price-val">5 ש"ח</div>
             </div>
         </div>
     </div>
@@ -622,7 +723,10 @@
         <div id="tab-predictions" class="tab-content active">
             <div class="app-header">
                 <div class="hints-counter-badge">👑 <span id="hints-counter-val">0</span> יתרת VIP</div>
-                <button class="btn-rules-top" onclick="openModal('rules-modal')">📜 חוקים</button>
+                <div class="header-buttons-group">
+                    <button class="btn-header-action" onclick="openModal('settings-modal')">⚙️</button>
+                    <button class="btn-header-action" onclick="openModal('rules-modal')">📜 חוקים</button>
+                </div>
             </div>
 
             <div class="champions-selection">
@@ -634,7 +738,7 @@
                 </div>
                 <div class="champ-box" onclick="openScorerSelector()">
                     <span>⚽ מלך השערים</span>
-                    <div class="champ-img-container" id="global-selected-scorer-flag">🇦🇷</div>
+                    <div class="champ-img-container" id="global-selected-scorer-flag">🏃‍♂️</div>
                     <div class="champ-name" id="global-selected-scorer-name">ליונל מסי</div>
                     <button class="btn-lock-prediction" style="padding:2px; font-size:9px; margin-top:4px;" onclick="event.stopPropagation(); alert('🔒 הבחירה ננעלה!');">🔒 נעל</button>
                 </div>
@@ -651,7 +755,7 @@
             <div class="section-title" id="round-title-display">לוח משחקים: שלב הבתים</div>
             
             <div id="matches-list-container">
-                <!-- שלב הבתים (מוזרק דינמית דרך ה-JS למטה) -->
+                <!-- שלב הבתים -->
                 <div class="round-section id-round-1 active" id="games-injector-batch-1"></div>
                 
                 <!-- שמינית גמר -->
@@ -714,33 +818,28 @@
     let isPremiumActive = false;
     let activeScoreBoxId = null;
 
-    // רשימת שחקנים מתוקנת ומדויקת
+    // 30 השחקנים המובילים בלבד למלך השערים - ללא דגלים
     const playersList = [
-        "אנדריי קרמאריץ' 🇭🇷", "אנטואן גריזמן 🇫🇷", "אנטוניו נוסה 🇳🇴", "אשרף חכימי 🇲🇦", "ארלינג הולאנד 🇳🇴",
-        "ג'אמאל מוסיאלה 🇩🇪", "ג'רמי דוקו 🇧🇪", "ג'וד בלינגהאם", "ג'ייקב רמוס 🇺🇸", "ג'יימס רודריגז 🇨🇴",
-        "דארווין נונייז 🇺🇾", "דאוסן ז'אקא 🇨🇭", "הארי קיין", "הוסה לואיס פראגה 🇵🇦", "ויניסיוס ג'וניור 🇧🇷",
-        "ורדן רודריגז 🇺🇾", "לוקה דה לה טורה 🇪🇸", "לוקה מודריץ' 🇭🇷", "לוטארו מרטינז 🇦🇷", "לאמין ימאל 🇪🇸",
-        "ליאונל מסי 🇦🇷", "לרוי סאנה 🇩🇪", "מוחמד סאלח 🇪🇬", "מוהמד חמוד 🇩🇿", "מוהמד סימאקן 🇫🇷",
-        "מוסה דיאביי 🇫🇷", "מייק מניאן 🇫🇷", "מיגל אלמירון 🇵🇾", "מנדי קאני 🇸🇳", "מאכסים דה קויפה 🇧🇪",
-        "ניקו פאז 🇦🇷", "ניקו שולץ 🇩🇪", "סאדיו מאנה 🇸🇳", "ע'יס'ה עזאן 🇲🇦", "עמית חמו",
-        "פדרי 🇪🇸", "פיל פודן", "פלוריאן ווירץ 🇩🇪", "פלורינאל לואיס 🇧🇷", "קווין דה-ברויינה 🇧🇪",
-        "קיליאן מבאפה 🇫🇷", "כריסטיאן פוליסיץ' 🇺🇸", "כריסטיאנו רונאלדו 🇵🇹", "ראפינייה 🇧🇷", "ריאן שרקי 🇫🇷",
-        "ריאד מהרז 🇩🇿", "רומלו לוקאקו 🇧🇪", "רודרי 🇪🇸"
+        "אנטואן גריזמן", "ארלינג הולאנד", "ג'אמאל מוסיאלה", "ג'וד בלינגהאם", "ג'רמי דוקו",
+        "דארווין נונייז", "הארי קיין", "ויניסיוס ג'וניור", "כריסטיאנו רונאלדו", "לאמין ימאל",
+        "לוקה מודריץ'", "לוטארו מרטינז", "ליונל מסי", "לרוי סאנה", "מוחמד סאלח",
+        "ניימאר", "פדרי", "פיל פודן", "פלוריאן ווירץ", "קווין דה-ברויינה",
+        "קיליאן מבאפה", "רודרי", "רומלו לוקאקו", "ריאד מהרז"
     ].sort((a,b) => a.localeCompare(b, 'he'));
 
-    // נבחרות ממוינות אבסולוטית לפי א-ב' וללא דגלים שבורים
+    // נבחרות מסוננות (ללא קוראסאו, קונגו נקייה מדמוקרטית)
     const teamsList = [
-        "אוסטרליה 🇦🇺", "אוזבקיסטן 🇺🇿", "אอสטריה 🇦🇹", "אוקראינה", "אורוגוואי 🇺🇾", "אינאקי וויליאמס",
+        "אוסטרליה 🇦🇺", "אוזבקיסטן 🇺🇿", "אอสטריה 🇦🇹", "אוקראינה", "אורוגוואי 🇺🇾", 
         "איראן 🇮🇷", "אלג'יריה 🇩🇿", "אנגליה", "אקוואדור 🇪🇨", "ארגנטינה 🇦🇷", "ארצות הברית 🇺🇸",
         "בלגיה 🇧🇪", "בוסניה והרצגובינה 🇧🇦", "ברזיל 🇧🇷", "גאנה 🇬🇭", "גרמניה 🇩🇪", "דרום אפריקה 🇿🇦",
         "דרום קוריאה 🇰🇷", "האיטי 🇭🇹", "הולנד 🇳🇱", "חוף השנהב 🇨🇮", "תוניסיה 🇹🇳", "טורקיה 🇹🇷",
         "יפן 🇯🇵", "ירדן 🇯🇴", "כף ורדה 🇨🇻", "מקסיקו 🇲🇽", "מצרים 🇪🇬", "מרוקו 🇲🇦",
         "ניו זילנד 🇳🇿", "נורווגיה 🇳🇴", "סנגל 🇸🇳", "ספרד 🇪🇸", "סקוטלנד", "עיראק 🇮🇶",
         "ערב הסעודית 🇸🇦", "פנמה 🇵🇦", "פרגוואי 🇵🇾", "פורטוגל 🇵🇹", "צ'כיה 🇨🇿", "צרפת 🇫🇷",
-        "קנדה 🇨🇦", "קטר 🇶🇦", "קולומביה 🇨🇴", "קונגו הדמוקרטית 🇨🇩", "קרואטיה 🇭🇷", "קוראסאו 🇨🇼", "שוודיה 🇸🇪", "שווייץ 🇨🇭"
+        "קנדה 🇨🇦", "קטר 🇶🇦", "קולומביה 🇨🇴", "קונגו 🇨🇩", "קרואטיה 🇭🇷", "שוודיה 🇸🇪", "שווייץ 🇨🇭"
     ].sort((a,b) => a.localeCompare(b, 'he'));
 
-    // מאגר 48 משחקי שלב הבתים המלא של המונדיאל
+    // מאגר משחקי שלב הבתים
     const worldCupStage1Matches = [
         { id: "m1", group: "בית א'", home: "קטר", away: "אקוודור", date: "21/11", time: "18:00", ai: "1-2 לאקוודור", pop: "0-2 לאקוודור" },
         { id: "m2", group: "בית א'", home: "סנגל", away: "הולנד", date: "21/11", time: "21:00", ai: "0-2 להולנד", pop: "1-3 להולנד" },
@@ -760,7 +859,7 @@
         { id: "m16", group: "בית ח'", home: "פורטוגל", away: "גאנה", date: "26/11", time: "18:00", ai: "2-0 לפורטוגל", pop: "3-1 לפורטוגל" }
     ];
 
-    // בסיס נתוני דירוג עם החברים המקוריים בכל קבוצה וסנכרון נקודות מושלם
+    // בסיס נתוני דירוג
     const groupRankingsDatabase = {
         parliament: `
             <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div><span class="player-score">158</span></div>
@@ -817,7 +916,6 @@
     function filterRoundLocal(roundNum) {
         document.querySelectorAll('.round-nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-r' + roundNum).classList.add('active');
-        
         const titles = {1: 'שלב הבתים', 2: 'שמינית גמר', 3: 'רבע גמר', 4: 'חצי גמר', 5: 'הגמר'};
         document.getElementById('round-title-display').innerText = 'לוח משחקים: ' + titles[roundNum];
 
@@ -861,12 +959,10 @@
         playersList.forEach(p => {
             const item = document.createElement('div');
             item.className = 'selection-list-item';
-            item.innerText = p;
+            item.innerHTML = `<span>🏃\u200D♂️</span> <span>${p}</span>`;
             item.onclick = function() {
-                const flag = p.match(/[\uD83C-\uDBFF\uDC00-\uDFFF]+/g) || '';
-                const name = p.replace(flag, '').trim();
-                document.getElementById('global-selected-scorer-flag').innerText = flag || '⚽';
-                document.getElementById('global-selected-scorer-name').innerText = name;
+                document.getElementById('global-selected-scorer-flag').innerText = "🏃\u200D♂️";
+                document.getElementById('global-selected-scorer-name').innerText = p;
                 closeModal('scorer-selector-modal');
             };
             container.appendChild(item);
@@ -913,16 +1009,9 @@
             locks.forEach(l => l.innerText = "🔒");
         }
         
-        // עדכון אוטומטי של החלוניות שנמצאות במצב פתוח
         worldCupStage1Matches.forEach(m => {
             const box = document.getElementById('hint-' + m.id);
-            if(box && box.style.display === 'block') {
-                if(isPremiumActive) {
-                    box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${m.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${m.pop}`;
-                } else {
-                    box.innerHTML = `<button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש מנוי VIP עכשיו</button>`;
-                }
-            }
+            if(box) box.style.display = 'none';
         });
     }
 
@@ -938,10 +1027,8 @@
         } else {
             box.style.display = 'block';
             if (isPremiumActive) {
-                // למשתמשי פרימיום - מוצג המידע המלא ללא כפתור רכישה
                 box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
             } else {
-                // למי שאינו פרימיום - מוצג כפתור הרכישה בלבד
                 box.innerHTML = `<button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש מנוי VIP עכשיו</button>`;
             }
         }
