@@ -137,17 +137,23 @@
             border-radius: 14px;
             margin-bottom: 16px;
             border: 1px solid var(--border);
+            overflow-x: auto;
+            gap: 4px;
         }
+        .rounds-navigation::-webkit-scrollbar { display: none; }
+        
         .round-nav-btn {
             flex: 1;
+            min-width: 75px;
             background: none;
             border: none;
             color: var(--muted);
-            padding: 8px;
-            font-size: 12px;
+            padding: 8px 4px;
+            font-size: 11px;
             font-weight: 700;
             border-radius: 10px;
             cursor: pointer;
+            white-space: nowrap;
         }
         .round-nav-btn.active {
             background: var(--card);
@@ -171,6 +177,11 @@
             border-radius: 14px;
             padding: 8px;
             text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .champ-box:hover {
+            background: rgba(255,255,255,0.05);
         }
 
         .champ-box span {
@@ -189,6 +200,10 @@
             border: 2px solid var(--border);
             overflow: hidden;
             background: #111823;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
         }
 
         .champ-img-container img {
@@ -200,6 +215,9 @@
         .champ-name {
             font-size: 12px;
             font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .section-title {
@@ -280,6 +298,10 @@
             font-size: 16px;
             font-weight: 700;
             outline: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .btn-vip-lock {
@@ -328,6 +350,21 @@
             font-size: 12px;
             line-height: 1.6;
             color: #E2E8F0;
+        }
+
+        .premium-upgrade-link-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(90deg, #FFC837, #FF8008);
+            color: #000;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 11px;
+            margin-top: 8px;
+            border: none;
+            cursor: pointer;
         }
 
         .user-groups-scroller {
@@ -379,7 +416,6 @@
         .rank-2 { background: #C0C0C0; color: #000; }
         .rank-3 { background: #CD7F32; color: #000; }
         .player-name { font-size: 13px; font-weight: 600; color: #FFF; }
-        .bot-tag { background: #0052D4; color: white; font-size: 9px; padding: 1px 4px; border-radius: 4px; }
         .player-score { font-size: 15px; font-weight: 800; }
 
         .modal-overlay {
@@ -422,30 +458,6 @@
         }
         .rules-item { font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: #E2E8F0; }
 
-        .push-switch-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #1C2635;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-        }
-        .switch-label { font-size: 13px; font-weight: 600; }
-        .switch-input { cursor: pointer; width: 40px; height: 20px; }
-
-        .push-notification-box {
-            background: #161F2C;
-            border-right: 4px solid var(--accent);
-            padding: 10px 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: #FFF;
-            line-height: 1.4;
-        }
-        .push-notification-box strong { color: var(--accent); display: block; margin-bottom: 2px; }
-
         .price-option-box {
             background: rgba(255,255,255,0.02);
             border: 1px solid var(--border);
@@ -483,6 +495,55 @@
         .round-section.active {
             display: block;
         }
+
+        /* סגנון חדש ומהמם לסרגל בחירת מספרים 1-10 */
+        .selector-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 15px 5px;
+            background: #0D1420;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+        .selector-num-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: #FFF;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .selector-num-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* סגנון פריטי רשימת בחירה */
+        .selection-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .selection-list-item:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 157, 0.02);
+        }
     </style>
 </head>
 <body>
@@ -495,6 +556,7 @@
 <div class="phone-container">
     <div class="dynamic-island"></div>
 
+    <!-- פופ-אפ חוקים ופושים -->
     <div class="modal-overlay" id="rules-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -508,29 +570,16 @@
             <div class="rules-item">טעות מוחלטת בזהות המנצחת או בתוצאת התיקו מעניקה 0 נקודות.</div>
             
             <div class="rules-group-title">🏅 שלב 2: שיטת הניקוד בשלבי הנוקאאוט</div>
-            <div class="rules-item">כל הניחושים בכל שלבי הטורניר מתייחסים לתוצאה בתום 90 דקות חוקיות בלבד כולל תוספת זמן פציעות (לא כולל הארכות ופנדלים).</div>
-            <div class="rules-item">בשלב שמינית הגמר ורבע הגמר, פגיעה בתוצאה מדויקת משדרגת את הניקוד ומעניקה 4 נקודות.</div>
-            <div class="rules-item">בשלב חצי הגמר והגמר הגדול, פגיעה בתוצאה מדויקת מעניקה בונוס מקסימלי של 5 נקודות.</div>
+            <div class="rules-item">כל הניחושים מתייחסים לתוצאה בתום 90 דקות חוקיות בלבד כולל תוספת זמן פציעות.</div>
+            <div class="rules-item">בשלבי שמינית ורבע הגמר, פגיעה בתוצאה מדויקת מעניקה 4 נקודות.</div>
+            <div class="rules-item">בשלבי חצי הגמר והגמר הגדול, פגיעה בתוצאה מדויקת מעניקה בונוס של 5 נקודות.</div>
             
             <div class="rules-group-title">🔒 שלב 3: חוק הסודיות והנעילה</div>
             <div class="rules-item">אף משתמש אינו יכול לצפות בניחושים של חברים שלו לפני שהמשחק מתחיל.</div>
-            <div class="rules-item">כל הניחושים של חברי הקבוצה ננעלים ונחשפים יחד 5 דקות בדיוק לפני שריקת הפתיחה של כל משחק.</div>
+            <div class="rules-item">כל הניחושים ננעלים ונחשפים יחד 5 דקות בדיוק לפני שריקת הפתיחה של כל משחק.</div>
 
-            <div class="rules-group-title">🔔 שלב 4: ניהול התראות פוש</div>
-            <div class="push-switch-container">
-                <span class="switch-label">קבלת התראות לנייד:</span>
-                <input type="checkbox" class="switch-input" checked onclick="alert('הגדרות הפושים עודכנו!')">
-            </div>
-            
-            <div class="rules-item" style="color: var(--muted); margin-bottom: 12px;">דוגמאות להתראות המערכת הרשמיות:</div>
-            <div class="push-notification-box">
-                <strong>⏰ התראה לפני משחק:</strong>
-                המשחק בין ארגנטינה לערב הסעודית יתחיל בעוד 30 דקות! כנס עכשיו למלא את הניחוש שלך לפני שהלוח יינעל.
-            </div>
-            <div class="push-notification-box">
-                <strong>🎉 עדכון ניקוד לאחר משחק:</strong>
-                המשחק הסתיים! פגעת בתוצאה מדויקת והרווחת 3 נקודות לקבוצה. מקומך הנוכחי בטבלה: #1.
-            </div>
+            <div class="rules-group-title">💡 שלב 4: חוכמת ההמונים והמלצות VIP</div>
+            <div class="rules-item">נתון "חוכמת ההמונים" המוצג בחבילות ה-VIP מייצג ממוצע סטטיסטי מדויק וחי של כלל ניחושי המשתמשים באפליקציה למשחק זה!</div>
 
             <div class="rules-group-title">👑 חבילות המלצות פרימיום VIP</div>
             <div class="rules-item">פרימיום כללי לכל משחקי המונדיאל: 60 ש"ח</div>
@@ -540,6 +589,7 @@
         </div>
     </div>
 
+    <!-- פופ-אפ רכישת פרימיום -->
     <div class="modal-overlay" id="premium-store-modal">
         <div class="modal-card" style="border-color: var(--gold);">
             <div class="modal-header">
@@ -547,7 +597,7 @@
                 <button class="btn-close-modal" onclick="closeModal('premium-store-modal')">&times;</button>
             </div>
             <p style="font-size: 12px; color: var(--muted); margin-bottom: 15px; line-height: 1.4;">
-                קבל גישה מיידית לתחזית מודל ה-AI החכם וממוצע המלצות האנליסטים הרשמי! בחר חבילה:
+                קבל גישה מיידית לנתוני "המלצת AI" וממוצע "חוכמת ההמונים" החי של כל האפליקציה! בחר חבילה:
             </p>
             <div class="price-option-box" onclick="buyBundle('כללי')">
                 <div class="price-title">🚀 פרימיום כללי (כל משחקי המונדיאל)</div>
@@ -568,8 +618,60 @@
         </div>
     </div>
 
+    <!-- פופ-אפ בחירת מספרים (תוצאה) -->
+    <div class="modal-overlay" id="number-selector-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--accent);" id="number-selector-title">בחר תוצאה</h3>
+                <button class="btn-close-modal" onclick="closeModal('number-selector-modal')">&times;</button>
+            </div>
+            <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">בחר מספר מ-1 עד 10:</p>
+            <div class="selector-row">
+                <button class="selector-num-btn" onclick="selectNumberValue(0)">0</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(1)">1</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(2)">2</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(3)">3</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(4)">4</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(5)">5</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(6)">6</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(7)">7</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(8)">8</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(9)">9</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(10)">10</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- פופ-אפ בחירת נבחרת מנצחת -->
+    <div class="modal-overlay" id="team-selector-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--gold);">🏆 בחר את הנבחרת המנצחת שלך</h3>
+                <button class="btn-close-modal" onclick="closeModal('team-selector-modal')">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column;" id="teams-list-injection-container">
+                <!-- רשימת הנבחרות תוזרק פה -->
+            </div>
+        </div>
+    </div>
+
+    <!-- פופ-אפ בחירת מלך השערים -->
+    <div class="modal-overlay" id="scorer-selector-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--gold);">⚽ בחר מלך שערים</h3>
+                <button class="btn-close-modal" onclick="closeModal('scorer-selector-modal')">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column;" id="scorers-list-injection-container">
+                <!-- רשימת השחקנים תוזרק פה -->
+            </div>
+        </div>
+    </div>
+
+
     <div class="app-content">
         
+        <!-- טאב 1: מסך ניחושים -->
         <div id="tab-predictions" class="tab-content active">
             <div class="app-header">
                 <div class="hints-counter-badge">👑 <span id="hints-counter-val">0</span> יתרת VIP</div>
@@ -577,124 +679,107 @@
             </div>
 
             <div class="champions-selection">
-                <div class="champ-box">
+                <div class="champ-box" onclick="openTeamSelector()">
                     <span>🏆 המנצחת שלי</span>
-                    <div class="champ-img-container"><img src="https://flagcdn.com/w160/ar.png" alt="Argentina"></div>
-                    <div class="champ-name">ארגנטינה</div>
+                    <div class="champ-img-container" id="global-selected-team-flag">🇦🇷</div>
+                    <div class="champ-name" id="global-selected-team-name">ארגנטינה</div>
+                    <button class="btn-lock-prediction" style="padding:2px; font-size:9px; margin-top:4px;" onclick="event.stopPropagation(); alert('🔒 הבחירה ננעלה!');">🔒 נעל</button>
                 </div>
-                <div class="champ-box">
-                    <span>⭐ שחקן מצטיין</span>
-                    <div class="champ-img-container"><img src="https://assets.bwbx.io/images/users/iqjWHBFdfxIU/ia07_D4Z58pI/v1/1200x-1.jpg" alt="Messi"></div>
-                    <div class="champ-name">ליונל מסי</div>
+                <div class="champ-box" onclick="openScorerSelector()">
+                    <span>⚽ מלך השערים</span>
+                    <div class="champ-img-container" id="global-selected-scorer-flag"><img src="https://images.fineartamerica.com/images/images-allowed-art/squared-profiles/lionel-messi.jpg" style="border-radius:50%; object-fit:cover;" alt="Messi"></div>
+                    <div class="champ-name" id="global-selected-scorer-name">ליונל מסי 🇦🇷</div>
+                    <button class="btn-lock-prediction" style="padding:2px; font-size:9px; margin-top:4px;" onclick="event.stopPropagation(); alert('🔒 הבחירה ננעלה!');">🔒 נעל</button>
                 </div>
             </div>
 
             <div class="rounds-navigation">
-                <button class="round-nav-btn active" id="btn-r1" onclick="filterRoundLocal(1)">מחזור 1</button>
-                <button class="round-nav-btn" id="btn-r2" onclick="filterRoundLocal(2)">מחזור 2</button>
-                <button class="round-nav-btn" id="btn-r3" onclick="filterRoundLocal(3)">מחזור 3</button>
+                <button class="round-nav-btn active" id="btn-r1" onclick="filterRoundLocal(1)">שלב הבתים</button>
+                <button class="round-nav-btn" id="btn-r2" onclick="filterRoundLocal(2)">שמינית גמר</button>
+                <button class="round-nav-btn" id="btn-r3" onclick="filterRoundLocal(3)">רבע גמר</button>
+                <button class="round-nav-btn" id="btn-r4" onclick="filterRoundLocal(4)">חצי גמר</button>
+                <button class="round-nav-btn" id="btn-r5" onclick="filterRoundLocal(5)">הגמר</button>
             </div>
 
-            <div class="section-title" id="round-title-display">לוח משחקים: מחזור 1</div>
+            <div class="section-title" id="round-title-display">לוח משחקים: שלב הבתים</div>
             
             <div id="matches-list-container">
                 
+                <!-- === שלב הבתים === -->
                 <div class="round-section id-round-1 active">
                     <div class="match-card">
                         <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">21/11, 18:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-1')">🔒</button></div>
                         <div class="match-row">
                             <div class="team-side"><span class="team-name">קטר</span></div>
-                            <input type="number" class="score-box" placeholder="-">
+                            <div class="score-box" id="box-m1-home" onclick="openNumberSelector('box-m1-home')">-</div>
                             <span>:</span>
-                            <input type="number" class="score-box" placeholder="-">
+                            <div class="score-box" id="box-m1-away" onclick="openNumberSelector('box-m1-away')">-</div>
                             <div class="team-side"><span class="team-name">אקוודור</span></div>
                         </div>
                         <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
-                        <div class="vip-unlocked-box hint-box-class" id="hint-1">תחזית מודל AI: 1 - 2 לאקוודור <br> ממוצע אנליסטים: 0 - 2 לאקוודור</div>
-                    </div>
-                    <div class="match-card">
-                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">21/11, 21:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-2')">🔒</button></div>
-                        <div class="match-row">
-                            <div class="team-side"><span class="team-name">סנגל</span></div>
-                            <input type="number" class="score-box" placeholder="-">
-                            <span>:</span>
-                            <input type="number" class="score-box" placeholder="-">
-                            <div class="team-side"><span class="team-name">הולנד</span></div>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-1">
+                            💡 <strong>המלצת AI:</strong> 1 - 2 לאקוודור <br> 
+                            📊 <strong>חוכמת ההמונים:</strong> 0 - 2 לאקוודור
+                            <button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש מנוי VIP עכשיו</button>
                         </div>
-                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
-                        <div class="vip-unlocked-box hint-box-class" id="hint-2">תחזית מודל AI: 0 - 2 להולנד <br> ממוצע אנליסטים: 1 - 2 להולנד</div>
                     </div>
                     <div class="match-card">
-                        <div class="match-meta"><span class="group-heading">בית ב'</span><span class="match-time">22/11, 15:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-3')">🔒</button></div>
-                        <div class="match-row">
-                            <div class="team-side"><span class="team-name">אנגליה</span></div>
-                            <input type="number" class="score-box" placeholder="-">
-                            <span>:</span>
-                            <input type="number" class="score-box" placeholder="-">
-                            <div class="team-side"><span class="team-name">איראן</span></div>
-                        </div>
-                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
-                        <div class="vip-unlocked-box hint-box-class" id="hint-3">תחזית מודל AI: 3 - 0 לאנגליה <br> ממוצע אנליסטים: 2 - 0 לאנגליה</div>
-                    </div>
-                    <div class="match-card">
-                        <div class="match-meta"><span class="group-heading">בית ג'</span><span class="match-time">23/11, 12:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-4')">🔒</button></div>
+                        <div class="match-meta"><span class="group-heading">בית ג'</span><span class="match-time">23/11, 12:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-2')">🔒</button></div>
                         <div class="match-row">
                             <div class="team-side"><span class="team-name">ארגנטינה</span></div>
-                            <input type="number" class="score-box" value="2">
+                            <div class="score-box" id="box-m2-home" onclick="openNumberSelector('box-m2-home')">2</div>
                             <span>:</span>
-                            <input type="number" class="score-box" value="1">
+                            <div class="score-box" id="box-m2-away" onclick="openNumberSelector('box-m2-away')">1</div>
                             <div class="team-side"><span class="team-name">ערב הסעודית</span></div>
                         </div>
                         <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
-                        <div class="vip-unlocked-box hint-box-class" id="hint-4">תחזית מודל AI: 3 - 0 לארגנטינה <br> ממוצע אנליסטים: 4 - 0 לארגנטינה</div>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-2">
+                            💡 <strong>המלצת AI:</strong> 3 - 0 לארגנטינה <br> 
+                            📊 <strong>חוכמת ההמונים:</strong> 4 - 0 לארגנטינה
+                            <button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש מנוי VIP עכשיו</button>
+                        </div>
                     </div>
                 </div>
 
+                <!-- === שמינית גמר === -->
                 <div class="round-section id-round-2">
                     <div class="match-card">
-                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">25/11, 15:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-5')">🔒</button></div>
-                        <div class="match-row">
-                            <div class="team-side"><span class="team-name">קטר</span></div>
-                            <input type="number" class="score-box" placeholder="-">
-                            <span>:</span>
-                            <input type="number" class="score-box" placeholder="-">
-                            <div class="team-side"><span class="team-name">סנגל</span></div>
-                        </div>
-                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
-                        <div class="vip-unlocked-box hint-box-class" id="hint-5">תחזית מודל AI: 0 - 2 לסנגל <br> ממוצע אנליסטים: 1 - 2 לסנגל</div>
-                    </div>
-                    <div class="match-card">
-                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">25/11, 18:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-6')">🔒</button></div>
+                        <div class="match-meta"><span class="group-heading">שמינית גמר משחק 1</span><span class="match-time">03/12, 17:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-3')">🔒</button></div>
                         <div class="match-row">
                             <div class="team-side"><span class="team-name">הולנד</span></div>
-                            <input type="number" class="score-box" placeholder="-">
+                            <div class="score-box" id="box-m3-home" onclick="openNumberSelector('box-m3-home')">-</div>
                             <span>:</span>
-                            <input type="number" class="score-box" placeholder="-">
-                            <div class="team-side"><span class="team-name">אקוודור</span></div>
+                            <div class="score-box" id="box-m3-away" onclick="openNumberSelector('box-m3-away')">-</div>
+                            <div class="team-side"><span class="team-name">ארה"ב</span></div>
                         </div>
                         <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
-                        <div class="vip-unlocked-box hint-box-class" id="hint-6">תחזית מודל AI: 2 - 1 להולנד <br> ממוצע אנליסטים: 1 - 1 תיקו</div>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-3">
+                            💡 <strong>המלצת AI:</strong> 2 - 1 להולנד <br> 
+                            📊 <strong>חוכמת ההמונים:</strong> 1 - 1 תיקו
+                            <button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש מנוי VIP עכשיו</button>
+                        </div>
                     </div>
                 </div>
 
+                <!-- === רבע גמר === -->
                 <div class="round-section id-round-3">
-                    <div class="match-card">
-                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">29/11, 17:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-7')">🔒</button></div>
-                        <div class="match-row">
-                            <div class="team-side"><span class="team-name">הולנד</span></div>
-                            <input type="number" class="score-box" placeholder="-">
-                            <span>:</span>
-                            <input type="number" class="score-box" placeholder="-">
-                            <div class="team-side"><span class="team-name">קטר</span></div>
-                        </div>
-                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
-                        <div class="vip-unlocked-box hint-box-class" id="hint-7">תחזית מודל AI: 3 - 0 להולנד <br> ממוצע אנליסטים: 4 - 0 להולנד</div>
-                    </div>
+                    <p style="text-align:center; font-size:12px; color:var(--muted); padding:20px;">המשחקים לשלב רבע הגמר יעודכנו בקרוב!</p>
+                </div>
+
+                <!-- === חצי גמר === -->
+                <div class="round-section id-round-4">
+                    <p style="text-align:center; font-size:12px; color:var(--muted); padding:20px;">המשחקים לשלב חצי הגמר יעודכנו בקרוב!</p>
+                </div>
+
+                <!-- === הגמר === -->
+                <div class="round-section id-round-5">
+                    <p style="text-align:center; font-size:12px; color:var(--muted); padding:20px;">המשחק לגמר הגדול יעודכן בקרוב!</p>
                 </div>
 
             </div>
         </div>
 
+        <!-- טאב 2: מסך דירוג -->
         <div id="tab-leaderboard" class="tab-content">
             <div class="section-title" style="margin-top: 10px;">הקבוצות שלי</div>
             <div class="user-groups-scroller">
@@ -714,31 +799,13 @@
 
             <div class="section-title" id="leaderboard-title">טבלת הדירוג: הפרלמנט</div>
             <div class="leaderboard-list" id="dynamic-leaderboard">
-                <div class="player-row">
-                    <div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div>
-                    <span class="player-score">158</span>
-                </div>
-                <div class="player-row">
-                    <div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">אבי אמציה</span></div>
-                    <span class="player-score">149</span>
-                </div>
-                <div class="player-row me">
-                    <div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div>
-                    <span class="player-score">142</span>
-                </div>
-                <div class="player-row">
-                    <div class="player-info"><span class="rank-num">4</span><span class="player-name">קרקו</span></div>
-                    <span class="player-score">130</span>
-                </div>
-                <div class="player-row">
-                    <div class="player-info"><span class="rank-num">5</span><span class="player-name">בוט ינשוף 🦉</span></div>
-                    <span class="player-score">122</span>
-                </div>
+                <!-- נתוני הדירוג המסונכרנים לחלוטין (אתה, הינשוף והקוף עם נקודות זהות) -->
             </div>
         </div>
 
     </div>
 
+    <!-- בר ניווט תחתון -->
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-predictions" onclick="switchTab('predictions')">
             <span class="nav-icon">📝</span>
@@ -753,35 +820,117 @@
 
 <script>
     let isPremiumActive = false;
+    let activeScoreBoxId = null;
 
+    // רשימות הדאטה ששלחת לי
+    const playersList = [
+        "ליאונל מסי 🇦🇷", "כריסטיאנו רונאלדו 🇵🇹", "קיליאן מבאפה 🇫🇷", "לאמין יאมאל 🇪🇸", "ארלינג הולאנד 🇳🇴",
+        "ויניסיוס ג'וניור 🇧🇷", "ג'וד בלינגהאם 🏴\u200D🏴\u200D🏴\u200D🏴", "הארי קיין 🏴\u200D🏴\u200D🏴\u200D🏴", "רודרי 🇪🇸", "פדרי 🇪🇸",
+        "גאבי 🇪🇸", "ראפינייה 🇧🇷", "לוקה מודריץ' 🇭🇷", "קווין דה-ברויינה 🇧🇪", "רומלו לוקאקו 🇧🇪",
+        "לוטארו מרטינז 🇦🇷", "ריאן שרקי 🇫🇷", "ג'אמאל מוסיאלה 🇩🇪", "פלוריאן ווירץ 🇩🇪", "כריסטיאן פוליסיץ' 🇺🇸",
+        "פיל פודן 🏴\u200D🏴\u200D🏴\u200D🏴", "אנטואן גריזמן 🇫🇷", "מוסה דיאביי 🇫🇷", "אשרף חכימי 🇲🇦", "ע'יס'ה עזאן 🇲🇦",
+        "מוחמד סאלח 🇪🇬", "סאדיו מאנה 🇸🇳", "אינאקי וויליאמס 🇬🇭", "אנדריי קרמאריץ' 🇭🇷", "לרוי סאנה 🇩🇪",
+        "נטוניו נוסה 🇳🇴", "ניקו פאז 🇦🇷", "ג'רמי דוקו 🇧🇪", "אלסון 🇧🇷", "מייק מניאן 🇫🇷",
+        "דאוסן ז'אקא 🇨חש", "ג'ייקב רמוס 🇺🇸", "מוהמד סימאקן 🇫🇷", "פלורינאל לואיס 🇧🇷", "מנדי קאני 🇸🇳",
+        "ניקו שולץ 🇩🇪", "מיגל אלמירון 🇵🇾", "הוסה לואיס פראגה 🇵🇦", "מאכסים דה קויפה 🇧🇪", "מוהמד חמוד 🇩🇿",
+        "ריאד מהרז 🇩🇿", "ירדן רודריגז 🇺🇾", "דארווין נונייז 🇺🇾", "ג'יימס רודריגז 🇨🇴", "לוקה דה לה טורה 🇪🇸"
+    ];
+
+    const teamsList = [
+        "ארצות הברית 🇺🇸", "מקסיקו 🇲🇽", "קנדה 🇨🇦", "מרוקו 🇲🇦", "סנגל 🇸🇳", "מצרים 🇪🇬",
+        "אלג'יריה 🇩🇿", "גאנה 🇬🇭", "תוניסיה 🇹🇳", "חוף השנהב 🇨🇮", "דרום אפריקה 🇿🇦", "כף ורדה 🇨🇻",
+        "קונגו הדמוקרטית 🇨🇩", "יפן 🇯🇵", "דרום קוריאה 🇰🇷", "ערב הסעודית 🇸🇦", "אוסטרליה 🇦🇺", "איראן 🇮🇷",
+        "קטר 🇶🇦", "אוזבקיסטן 🇺🇿", "ירדן 🇯🇴", "עיראק 🇮🇶", "ארגנטינה 🇦🇷", "ברזיל 🇧🇷",
+        "קולומביה 🇨🇴", "אורוגוואי 🇺🇾", "קוואדור 🇪🇨", "פרגוואי 🇵🇾", "פנמה 🇵🇦", "האיטי 🇭🇹",
+        "קוראסאו 🇨🇼", "ניו זילנד 🇳🇿", "ספרד 🇪🇸", "צרפת 🇫🇷", "גרמניה 🇩🇪", "אנגליה 🏴\u200D🏴\u200D🏴\u200D🏴",
+        "פורטוגל 🇵🇹", "הולנד 🇳🇱", "בלגיה 🇧🇪", "קרואטיה 🇭🇷", "נורווגיה 🇳🇴", "שווייץ 🇨🇭",
+        "אוסטריה 🇦🇹", "סקוטלנד 🏴\u200D🏴\u200D🏴\u200D🏴", "שוודיה 🇸🇪", "טורקיה 🇹🇷", "בוסניה והרצגובינה 🇧🇦", "צ'כיה 🇨🇿"
+    ];
+
+    // בסיס נתוני דירוג - נקודות זהות לחלוטין בכל הקבוצות
     const groupRankingsDatabase = {
         parliament: `
             <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div><span class="player-score">158</span></div>
             <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">אבי אמציה</span></div><span class="player-score">149</span></div>
             <div class="player-row me"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div><span class="player-score">142</span></div>
-            <div class="player-row"><div class="player-info"><span class="rank-num">4</span><span class="player-name">קרקו</span></div><span class="player-score">130</span></div>
-            <div class="player-row"><div class="player-info"><span class="rank-num">5</span><span class="player-name">בוט ינשוף 🦉</span></div><span class="player-score">122</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">4</span><span class="player-name">בוט ינשוף 🦉</span></div><span class="player-score">138</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">5</span><span class="player-name">בוט קוף 🐒</span></div><span class="player-score">122</span></div>
         `,
         work: `
-            <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">הבוס הגדול 💰</span></div><span class="player-score">165</span></div>
-            <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">מיכל מהשיווק</span></div><span class="player-score">151</span></div>
-            <div class="player-row me"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div><span class="player-score">112</span></div>
-            <div class="player-row"><div class="player-info"><span class="rank-num">4</span><span class="player-name">עמית חמו משאבי אנוש 👔</span></div><span class="player-score">104</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div><span class="player-score">158</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">אבי אמציה</span></div><span class="player-score">149</span></div>
+            <div class="player-row me"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div><span class="player-score">142</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">4</span><span class="player-name">בוט ינשוף 🦉</span></div><span class="player-score">138</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">5</span><span class="player-name">בוט קוף 🐒</span></div><span class="player-score">122</span></div>
         `,
         levy: `
-            <div class="player-row me"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">אתה ⭐</span></div><span class="player-score">142</span></div>
-            <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">בוט ינשוף 🦉</span></div><span class="player-score">138</span></div>
-            <div class="player-row"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">דני כהן</span></div><span class="player-score">121</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div><span class="player-score">158</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">אבי אמציה</span></div><span class="player-score">149</span></div>
+            <div class="player-row me"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div><span class="player-score">142</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">4</span><span class="player-name">בוט ינשוף 🦉</span></div><span class="player-score">138</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">5</span><span class="player-name">בוט קוף 🐒</span></div><span class="player-score">122</span></div>
         `
     };
 
     function filterRoundLocal(roundNum) {
         document.querySelectorAll('.round-nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-r' + roundNum).classList.add('active');
-        document.getElementById('round-title-display').innerText = 'לוח משחקים: מחזור ' + roundNum;
+        
+        const titles = {1: 'שלב הבתים', 2: 'שמינית גמר', 3: 'רבע גמר', 4: 'חצי גמר', 5: 'הגמר'};
+        document.getElementById('round-title-display').innerText = 'לוח משחקים: ' + titles[roundNum];
 
         document.querySelectorAll('.round-section').forEach(s => s.classList.remove('active'));
-        document.querySelector('.id-round-' + roundNum).classList.add('active');
+        const targetSection = document.querySelector('.id-round-' + roundNum);
+        if(targetSection) targetSection.classList.add('active');
+    }
+
+    function openNumberSelector(boxId) {
+        activeScoreBoxId = boxId;
+        openModal('number-selector-modal');
+    }
+
+    function selectNumberValue(val) {
+        if(activeScoreBoxId) {
+            document.getElementById(activeScoreBoxId).innerText = val;
+        }
+        closeModal('number-selector-modal');
+    }
+
+    // פונקציות פופ-אפ בחירת נבחרת ושחקן
+    function openTeamSelector() {
+        const container = document.getElementById('teams-list-injection-container');
+        container.innerHTML = '';
+        teamsList.forEach(t => {
+            const item = document.createElement('div');
+            item.className = 'selection-list-item';
+            item.innerText = t;
+            item.onclick = function() {
+                const flag = t.match(/[\uD83C-\uDBFF\uDC00-\uDFFF]+/g) || '🏆';
+                const name = t.replace(flag, '').trim();
+                document.getElementById('global-selected-team-flag').innerText = flag;
+                document.getElementById('global-selected-team-name').innerText = name;
+                closeModal('team-selector-modal');
+            };
+            container.appendChild(item);
+        });
+        openModal('team-selector-modal');
+    }
+
+    function openScorerSelector() {
+        const container = document.getElementById('scorers-list-injection-container');
+        container.innerHTML = '';
+        playersList.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'selection-list-item';
+            item.innerText = p;
+            item.onclick = function() {
+                document.getElementById('global-selected-scorer-flag').innerText = "⚽";
+                document.getElementById('global-selected-scorer-name').innerText = p;
+                closeModal('scorer-selector-modal');
+            };
+            container.appendChild(item);
+        });
+        openModal('scorer-selector-modal');
     }
 
     function selectGroupTabLocal(element, groupKey) {
@@ -799,6 +948,10 @@
         
         document.getElementById('tab-' + tabName).classList.add('active');
         document.getElementById('nav-' + tabName).classList.add('active');
+
+        if(tabName === 'leaderboard') {
+            document.getElementById('dynamic-leaderboard').innerHTML = groupRankingsDatabase['parliament'];
+        }
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
@@ -816,7 +969,6 @@
             btn.style.background = "#00FF9D";
             counter.innerText = "אינסוף";
             locks.forEach(l => l.innerText = "💡");
-            boxes.forEach(b => b.style.display = 'block');
         } else {
             btn.innerText = "סטנדרטי (לא משודרג)";
             btn.style.background = "#FFC837";
@@ -839,6 +991,10 @@
         alert('רכישת חבילת ' + name + ' בוצעה בהצלחה!');
         closeModal('premium-store-modal');
     }
+
+    window.onload = function() {
+        document.getElementById('dynamic-leaderboard').innerHTML = groupRankingsDatabase['parliament'];
+    };
 </script>
 </body>
 </html>
