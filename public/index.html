@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WORLD CUP - Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #0A0E14;
+            --card: #111823;
+            --accent: #00FF9D;
+            --gold: #FFC837;
+            --text: #FFFFFF;
+            --muted: #8F9CAE;
+            --border: #1F2C3F;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Rubik', sans-serif;
+            letter-spacing: -0.1px;
+        }
+
+        body {
+            background-color: #030609;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .demo-toggle-bar {
+            margin-bottom: 12px;
+            background: #111823;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .demo-btn {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 412px;
+            height: 892px;
+            background-color: var(--bg);
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 8px solid #1F2530;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .dynamic-island {
+            width: 110px;
+            height: 30px;
+            background: #000;
+            border-radius: 20px;
+            margin: 10px auto 0 auto;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 50px 16px 90px 16px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .hints-counter-badge {
+            background: rgba(255, 200, 55, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-rules-top {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: #FFF;
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .rounds-navigation {
+            display: flex;
+            background: #0D1420;
+            padding: 4px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+        .round-nav-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .round-nav-btn.active {
+            background: var(--card);
+            color: var(--accent);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .champions-selection {
+            background: linear-gradient(135deg, #16222F, #0D1420);
+            border: 1px solid rgba(255, 200, 55, 0.25);
+            border-radius: 20px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .champ-box {
+            flex: 1;
+            background: rgba(255,255,255,0.01);
+            border-radius: 14px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .champ-box span {
+            display: block;
+            font-size: 10px;
+            color: var(--gold);
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .champ-img-container {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 6px auto;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            overflow: hidden;
+            background: #111823;
+        }
+
+        .champ-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .champ-name {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .section-title {
+            font-size: 15px;
+            color: #FFF;
+            margin: 15px 0 10px 0;
+            font-weight: 700;
+        }
+
+        .group-heading {
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(0, 255, 157, 0.05);
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 6px;
+            margin-top: 14px;
+            font-weight: 700;
+        }
+
+        .match-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .match-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .match-time {
+            color: #E2E8F0;
+            background: rgba(255,255,255,0.03);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 10px;
+        }
+
+        .match-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .team-name {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            color: #FFF;
+        }
+
+        .score-box {
+            width: 42px;
+            height: 42px;
+            background: #0D1420;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .btn-vip-lock {
+            background: none;
+            border: 1px solid rgba(255, 200, 55, 0.4);
+            color: var(--gold);
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-lock-prediction {
+            width: 100%;
+            background: rgba(0, 255, 157, 0.08);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            color: var(--accent);
+            padding: 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-lock-prediction:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .vip-unlocked-box {
+            display: none;
+            background: rgba(0, 255, 157, 0.05);
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            padding: 10px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #E2E8F0;
+        }
+
+        .user-groups-scroller {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 0 16px 0;
+            margin-bottom: 8px;
+        }
+        .user-groups-scroller::-webkit-scrollbar { display: none; }
+
+        .user-group-tab-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 16px;
+            min-width: 140px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .user-group-tab-card.active {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, #111823 0%, rgba(0,255,157,0.04) 100%);
+        }
+        .user-group-tab-card h4 { font-size: 13px; font-weight: 700; color: #FFF; margin-bottom: 2px; }
+        .user-group-tab-card span { font-size: 11px; color: var(--muted); }
+
+        .leaderboard-list { display: flex; flex-direction: column; gap: 8px; }
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 14px;
+        }
+        .player-row.me {
+            border-color: var(--accent);
+            background: linear-gradient(90deg, rgba(0,255,157,0.04), transparent);
+        }
+        .player-info { display: flex; align-items: center; gap: 10px; }
+        .rank-num {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 11px; font-weight: 700; background: #1F2C3F;
+        }
+        .rank-1 { background: #FFC837; color: #000; }
+        .rank-2 { background: #C0C0C0; color: #000; }
+        .rank-3 { background: #CD7F32; color: #000; }
+        .player-name { font-size: 13px; font-weight: 600; color: #FFF; }
+        .bot-tag { background: #0052D4; color: white; font-size: 9px; padding: 1px 4px; border-radius: 4px; }
+        .player-score { font-size: 15px; font-weight: 800; }
+
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-card {
+            background: #111823;
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 22px;
+            width: 100%;
+            max-height: 85%;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+        .btn-close-modal { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+        
+        .rules-group-title { 
+            font-size: 14px; 
+            color: var(--gold); 
+            font-weight: 700; 
+            margin: 18px 0 10px 0; 
+            padding-bottom: 4px;
+            border-bottom: 1px dashed rgba(255,200,55,0.2);
+        }
+        .rules-item { font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: #E2E8F0; }
+
+        .push-switch-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1C2635;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .switch-label { font-size: 13px; font-weight: 600; }
+        .switch-input { cursor: pointer; width: 40px; height: 20px; }
+
+        .push-notification-box {
+            background: #161F2C;
+            border-right: 4px solid var(--accent);
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #FFF;
+            line-height: 1.4;
+        }
+        .push-notification-box strong { color: var(--accent); display: block; margin-bottom: 2px; }
+
+        .price-option-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .price-option-box:hover {
+            border-color: var(--gold);
+            background: rgba(255,200,55,0.03);
+        }
+        .price-title { font-size: 13px; font-weight: 700; color: #FFF; }
+        .price-val { font-size: 14px; font-weight: 800; color: var(--gold); }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 72px;
+            background-color: #0C121A; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center; z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--muted); font-size: 11px; cursor: pointer; gap: 4px; flex: 1; font-weight: 600;
+        }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 20px; }
+
+        .round-section {
+            display: none;
+        }
+        .round-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="demo-toggle-bar">
+    <span>מצב המחשה:</span>
+    <button class="demo-btn" id="toggle-premium-btn" onclick="togglePremiumDemo()">סטנדרטי (לא משודרג)</button>
+</div>
+
+<div class="phone-container">
+    <div class="dynamic-island"></div>
+
+    <div class="modal-overlay" id="rules-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--accent);">📜 מדריך חוקי הטורניר</h3>
+                <button class="btn-close-modal" onclick="closeModal('rules-modal')">&times;</button>
+            </div>
+            
+            <div class="rules-group-title">🏆 שלב 1: שיטת הניקוד בשלב הבתים</div>
+            <div class="rules-item">פגיעה בתוצאה מדויקת מעניקה 3 נקודות מלאות (לדוגמה: ניחשת 1-2 והמשחק הסתיים ב-1-2).</div>
+            <div class="rules-item">פגיעה בכיוון המשחק בלבד מעניקה נקודה 1 (לדוגמה: ניחשת ניצחון 0-1 אך המשחק הסתיים ב-0-3).</div>
+            <div class="rules-item">טעות מוחלטת בזהות המנצחת או בתוצאת התיקו מעניקה 0 נקודות.</div>
+            
+            <div class="rules-group-title">🏅 שלב 2: שיטת הניקוד בשלבי הנוקאאוט</div>
+            <div class="rules-item">כל הניחושים בכל שלבי הטורניר מתייחסים לתוצאה בתום 90 דקות חוקיות בלבד כולל תוספת זמן פציעות (לא כולל הארכות ופנדלים).</div>
+            <div class="rules-item">בשלב שמינית הגמר ורבע הגמר, פגיעה בתוצאה מדויקת משדרגת את הניקוד ומעניקה 4 נקודות.</div>
+            <div class="rules-item">בשלב חצי הגמר והגמר הגדול, פגיעה בתוצאה מדויקת מעניקה בונוס מקסימלי של 5 נקודות.</div>
+            
+            <div class="rules-group-title">🔒 שלב 3: חוק הסודיות והנעילה</div>
+            <div class="rules-item">אף משתמש אינו יכול לצפות בניחושים של חברים שלו לפני שהמשחק מתחיל.</div>
+            <div class="rules-item">כל הניחושים של חברי הקבוצה ננעלים ונחשפים יחד 5 דקות בדיוק לפני שריקת הפתיחה של כל משחק.</div>
+
+            <div class="rules-group-title">🔔 שלב 4: ניהול התראות פוש</div>
+            <div class="push-switch-container">
+                <span class="switch-label">קבלת התראות לנייד:</span>
+                <input type="checkbox" class="switch-input" checked onclick="alert('הגדרות הפושים עודכנו!')">
+            </div>
+            
+            <div class="rules-item" style="color: var(--muted); margin-bottom: 12px;">דוגמאות להתראות המערכת הרשמיות:</div>
+            <div class="push-notification-box">
+                <strong>⏰ התראה לפני משחק:</strong>
+                המשחק בין ארגנטינה לערב הסעודית יתחיל בעוד 30 דקות! כנס עכשיו למלא את הניחוש שלך לפני שהלוח יינעל.
+            </div>
+            <div class="push-notification-box">
+                <strong>🎉 עדכון ניקוד לאחר משחק:</strong>
+                המשחק הסתיים! פגעת בתוצאה מדויקת והרווחת 3 נקודות לקבוצה. מקומך הנוכחי בטבלה: #1.
+            </div>
+
+            <div class="rules-group-title">👑 חבילות המלצות פרימיום VIP</div>
+            <div class="rules-item">פרימיום כללי לכל משחקי המונדיאל: 60 ש"ח</div>
+            <div class="rules-item">חבילת 10 המלצות VIP ממוקדות: 25 ש"ח</div>
+            <div class="rules-item">חבילת 5 המלצות VIP ממוקדות: 15 ש"ח</div>
+            <div class="rules-item">רכישת המלצה למשחק בודד: 5 ש"ח</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="premium-store-modal">
+        <div class="modal-card" style="border-color: var(--gold);">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--gold);">👑 פתח המלצות VIP חכמות</h3>
+                <button class="btn-close-modal" onclick="closeModal('premium-store-modal')">&times;</button>
+            </div>
+            <p style="font-size: 12px; color: var(--muted); margin-bottom: 15px; line-height: 1.4;">
+                קבל גישה מיידית לתחזית מודל ה-AI החכם וממוצע המלצות האנליסטים הרשמי! בחר חבילה:
+            </p>
+            <div class="price-option-box" onclick="buyBundle('כללי')">
+                <div class="price-title">🚀 פרימיום כללי (כל משחקי המונדיאל)</div>
+                <div class="price-val">60 ש"ח</div>
+            </div>
+            <div class="price-option-box" onclick="buyBundle('10 המלצות')">
+                <div class="price-title">💎 חבילת 10 המלצות VIP</div>
+                <div class="price-val">25 ש"ח</div>
+            </div>
+            <div class="price-option-box" onclick="buyBundle('5 המלצות')">
+                <div class="price-title">✨ חבילת 5 המלצות VIP</div>
+                <div class="price-val">15 ש"ח</div>
+            </div>
+            <div class="price-option-box" onclick="buyBundle('המלצה בודדת')">
+                <div class="price-title">⚽ המלצה למשחק בודד אחד</div>
+                <div class="price-val">5 ש"ח</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-content">
+        
+        <div id="tab-predictions" class="tab-content active">
+            <div class="app-header">
+                <div class="hints-counter-badge">👑 <span id="hints-counter-val">0</span> יתרת VIP</div>
+                <button class="btn-rules-top" onclick="openModal('rules-modal')">📜 חוקים</button>
+            </div>
+
+            <div class="champions-selection">
+                <div class="champ-box">
+                    <span>🏆 המנצחת שלי</span>
+                    <div class="champ-img-container"><img src="https://flagcdn.com/w160/ar.png" alt="Argentina"></div>
+                    <div class="champ-name">ארגנטינה</div>
+                </div>
+                <div class="champ-box">
+                    <span>⭐ שחקן מצטיין</span>
+                    <div class="champ-img-container"><img src="https://assets.bwbx.io/images/users/iqjWHBFdfxIU/ia07_D4Z58pI/v1/1200x-1.jpg" alt="Messi"></div>
+                    <div class="champ-name">ליונל מסי</div>
+                </div>
+            </div>
+
+            <div class="rounds-navigation">
+                <button class="round-nav-btn active" id="btn-r1" onclick="filterRoundLocal(1)">מחזור 1</button>
+                <button class="round-nav-btn" id="btn-r2" onclick="filterRoundLocal(2)">מחזור 2</button>
+                <button class="round-nav-btn" id="btn-r3" onclick="filterRoundLocal(3)">מחזור 3</button>
+            </div>
+
+            <div class="section-title" id="round-title-display">לוח משחקים: מחזור 1</div>
+            
+            <div id="matches-list-container">
+                
+                <div class="round-section id-round-1 active">
+                    <div class="match-card">
+                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">21/11, 18:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-1')">🔒</button></div>
+                        <div class="match-row">
+                            <div class="team-side"><span class="team-name">קטר</span></div>
+                            <input type="number" class="score-box" placeholder="-">
+                            <span>:</span>
+                            <input type="number" class="score-box" placeholder="-">
+                            <div class="team-side"><span class="team-name">אקוודור</span></div>
+                        </div>
+                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-1">תחזית מודל AI: 1 - 2 לאקוודור <br> ממוצע אנליסטים: 0 - 2 לאקוודור</div>
+                    </div>
+                    <div class="match-card">
+                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">21/11, 21:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-2')">🔒</button></div>
+                        <div class="match-row">
+                            <div class="team-side"><span class="team-name">סנגל</span></div>
+                            <input type="number" class="score-box" placeholder="-">
+                            <span>:</span>
+                            <input type="number" class="score-box" placeholder="-">
+                            <div class="team-side"><span class="team-name">הולנד</span></div>
+                        </div>
+                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-2">תחזית מודל AI: 0 - 2 להולנד <br> ממוצע אנליסטים: 1 - 2 להולנד</div>
+                    </div>
+                    <div class="match-card">
+                        <div class="match-meta"><span class="group-heading">בית ב'</span><span class="match-time">22/11, 15:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-3')">🔒</button></div>
+                        <div class="match-row">
+                            <div class="team-side"><span class="team-name">אנגליה</span></div>
+                            <input type="number" class="score-box" placeholder="-">
+                            <span>:</span>
+                            <input type="number" class="score-box" placeholder="-">
+                            <div class="team-side"><span class="team-name">איראן</span></div>
+                        </div>
+                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-3">תחזית מודל AI: 3 - 0 לאנגליה <br> ממוצע אנליסטים: 2 - 0 לאנגליה</div>
+                    </div>
+                    <div class="match-card">
+                        <div class="match-meta"><span class="group-heading">בית ג'</span><span class="match-time">23/11, 12:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-4')">🔒</button></div>
+                        <div class="match-row">
+                            <div class="team-side"><span class="team-name">ארגנטינה</span></div>
+                            <input type="number" class="score-box" value="2">
+                            <span>:</span>
+                            <input type="number" class="score-box" value="1">
+                            <div class="team-side"><span class="team-name">ערב הסעודית</span></div>
+                        </div>
+                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-4">תחזית מודל AI: 3 - 0 לארגנטינה <br> ממוצע אנליסטים: 4 - 0 לארגנטינה</div>
+                    </div>
+                </div>
+
+                <div class="round-section id-round-2">
+                    <div class="match-card">
+                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">25/11, 15:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-5')">🔒</button></div>
+                        <div class="match-row">
+                            <div class="team-side"><span class="team-name">קטר</span></div>
+                            <input type="number" class="score-box" placeholder="-">
+                            <span>:</span>
+                            <input type="number" class="score-box" placeholder="-">
+                            <div class="team-side"><span class="team-name">סנגל</span></div>
+                        </div>
+                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-5">תחזית מודל AI: 0 - 2 לסנגל <br> ממוצע אנליסטים: 1 - 2 לסנגל</div>
+                    </div>
+                    <div class="match-card">
+                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">25/11, 18:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-6')">🔒</button></div>
+                        <div class="match-row">
+                            <div class="team-side"><span class="team-name">הולנד</span></div>
+                            <input type="number" class="score-box" placeholder="-">
+                            <span>:</span>
+                            <input type="number" class="score-box" placeholder="-">
+                            <div class="team-side"><span class="team-name">אקוודור</span></div>
+                        </div>
+                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-6">תחזית מודל AI: 2 - 1 להולנד <br> ממוצע אנליסטים: 1 - 1 תיקו</div>
+                    </div>
+                </div>
+
+                <div class="round-section id-round-3">
+                    <div class="match-card">
+                        <div class="match-meta"><span class="group-heading">בית א'</span><span class="match-time">29/11, 17:00</span><button class="btn-vip-lock" onclick="handleVipClickLocal('hint-7')">🔒</button></div>
+                        <div class="match-row">
+                            <div class="team-side"><span class="team-name">הולנד</span></div>
+                            <input type="number" class="score-box" placeholder="-">
+                            <span>:</span>
+                            <input type="number" class="score-box" placeholder="-">
+                            <div class="team-side"><span class="team-name">קטר</span></div>
+                        </div>
+                        <button class="btn-lock-prediction" onclick="alert('🔒 ההימור ננעל בהצלחה!')">🔒 נעל הימור</button>
+                        <div class="vip-unlocked-box hint-box-class" id="hint-7">תחזית מודל AI: 3 - 0 להולנד <br> ממוצע אנליסטים: 4 - 0 להולנד</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="tab-leaderboard" class="tab-content">
+            <div class="section-title" style="margin-top: 10px;">הקבוצות שלי</div>
+            <div class="user-groups-scroller">
+                <div class="user-group-tab-card active" id="group-tab-parliament" onclick="selectGroupTabLocal(this, 'parliament')">
+                    <h4>הפרלמנט 🍻</h4>
+                    <span>טבלה חיה</span>
+                </div>
+                <div class="user-group-tab-card" id="group-tab-work" onclick="selectGroupTabLocal(this, 'work')">
+                    <h4>חברי העבודה 💼</h4>
+                    <span>טבלה חיה</span>
+                </div>
+                <div class="user-group-tab-card" id="group-tab-levy" onclick="selectGroupTabLocal(this, 'levy')">
+                    <h4>משפחת לוי 🏠</h4>
+                    <span>טבלה חיה</span>
+                </div>
+            </div>
+
+            <div class="section-title" id="leaderboard-title">טבלת הדירוג: הפרלמנט</div>
+            <div class="leaderboard-list" id="dynamic-leaderboard">
+                <div class="player-row">
+                    <div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div>
+                    <span class="player-score">158</span>
+                </div>
+                <div class="player-row">
+                    <div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">אבי אמציה</span></div>
+                    <span class="player-score">149</span>
+                </div>
+                <div class="player-row me">
+                    <div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div>
+                    <span class="player-score">142</span>
+                </div>
+                <div class="player-row">
+                    <div class="player-info"><span class="rank-num">4</span><span class="player-name">קרקו</span></div>
+                    <span class="player-score">130</span>
+                </div>
+                <div class="player-row">
+                    <div class="player-info"><span class="rank-num">5</span><span class="player-name">בוט ינשוף 🦉</span></div>
+                    <span class="player-score">122</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-predictions" onclick="switchTab('predictions')">
+            <span class="nav-icon">📝</span>
+            <span>ניחושים</span>
+        </div>
+        <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">
+            <span class="nav-icon">🏆</span>
+            <span>דירוג</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isPremiumActive = false;
+
+    const groupRankingsDatabase = {
+        parliament: `
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div><span class="player-score">158</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">אבי אמציה</span></div><span class="player-score">149</span></div>
+            <div class="player-row me"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div><span class="player-score">142</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">4</span><span class="player-name">קרקו</span></div><span class="player-score">130</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">5</span><span class="player-name">בוט ינשוף 🦉</span></div><span class="player-score">122</span></div>
+        `,
+        work: `
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">הבוס הגדול 💰</span></div><span class="player-score">165</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">מיכל מהשיווק</span></div><span class="player-score">151</span></div>
+            <div class="player-row me"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">אתה ⭐</span></div><span class="player-score">112</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num">4</span><span class="player-name">עמית חמו משאבי אנוש 👔</span></div><span class="player-score">104</span></div>
+        `,
+        levy: `
+            <div class="player-row me"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">אתה ⭐</span></div><span class="player-score">142</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-2">2</span><span class="player-name">בוט ינשוף 🦉</span></div><span class="player-score">138</span></div>
+            <div class="player-row"><div class="player-info"><span class="rank-num rank-3">3</span><span class="player-name">דני כהן</span></div><span class="player-score">121</span></div>
+        `
+    };
+
+    function filterRoundLocal(roundNum) {
+        document.querySelectorAll('.round-nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-r' + roundNum).classList.add('active');
+        document.getElementById('round-title-display').innerText = 'לוח משחקים: מחזור ' + roundNum;
+
+        document.querySelectorAll('.round-section').forEach(s => s.classList.remove('active'));
+        document.querySelector('.id-round-' + roundNum).classList.add('active');
+    }
+
+    function selectGroupTabLocal(element, groupKey) {
+        document.querySelectorAll('.user-group-tab-card').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+
+        const names = { parliament: 'הפרלמנט', work: 'חברי העבודה', levy: 'משפחת לוי' };
+        document.getElementById('leaderboard-title').innerText = 'טבלת הדירוג: ' + names[groupKey];
+        document.getElementById('dynamic-leaderboard').innerHTML = groupRankingsDatabase[groupKey];
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById('tab-' + tabName).classList.add('active');
+        document.getElementById('nav-' + tabName).classList.add('active');
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function togglePremiumDemo() {
+        isPremiumActive = !isPremiumActive;
+        const btn = document.getElementById('toggle-premium-btn');
+        const counter = document.getElementById('hints-counter-val');
+        const locks = document.querySelectorAll('.btn-vip-lock');
+        const boxes = document.querySelectorAll('.hint-box-class');
+        
+        if (isPremiumActive) {
+            btn.innerText = "VIP פתוח";
+            btn.style.background = "#00FF9D";
+            counter.innerText = "אינסוף";
+            locks.forEach(l => l.innerText = "💡");
+            boxes.forEach(b => b.style.display = 'block');
+        } else {
+            btn.innerText = "סטנדרטי (לא משודרג)";
+            btn.style.background = "#FFC837";
+            counter.innerText = "0";
+            locks.forEach(l => l.innerText = "🔒");
+            boxes.forEach(b => b.style.display = 'none');
+        }
+    }
+
+    function handleVipClickLocal(boxId) {
+        if (isPremiumActive) {
+            const box = document.getElementById(boxId);
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        } else {
+            openModal('premium-store-modal');
+        }
+    }
+
+    function buyBundle(name) {
+        alert('רכישת חבילת ' + name + ' בוצעה בהצלחה!');
+        closeModal('premium-store-modal');
+    }
+</script>
+</body>
+</html>
