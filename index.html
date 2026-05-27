@@ -41,23 +41,38 @@
         .demo-toggle-bar {
             margin-bottom: 12px;
             background: #111823;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 20px;
             border: 1px solid var(--border);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
-            font-size: 12px;
+            gap: 6px;
+            font-size: 11px;
             z-index: 1000;
+            width: 100%;
+            max-width: 412px;
+        }
+        .demo-buttons-row {
+            display: flex;
+            gap: 4px;
+            width: 100%;
         }
         .demo-btn {
-            background: var(--gold);
-            color: #000;
-            border: none;
-            padding: 4px 10px;
-            border-radius: 12px;
+            flex: 1;
+            background: #1F2C3F;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 6px 4px;
+            border-radius: 10px;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
+        }
+        .demo-btn.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
         }
 
         .phone-container {
@@ -102,10 +117,7 @@
             margin-bottom: 15px;
         }
 
-        .header-buttons-group {
-            display: flex;
-            gap: 6px;
-        }
+        .header-buttons-group { display: flex; gap: 6px; }
 
         .hints-counter-badge {
             background: rgba(255, 200, 55, 0.15);
@@ -183,7 +195,6 @@
             text-align: center;
             cursor: pointer;
         }
-
         .champ-box span {
             display: block;
             font-size: 10px;
@@ -447,7 +458,6 @@
         }
         .rules-item { font-size: 13px; line-height: 1.6; margin-bottom: 10px; color: #E2E8F0; }
 
-        /* סגנון למסך הגדרות והתראות */
         .setting-toggle-row {
             display: flex;
             justify-content: space-between;
@@ -555,14 +565,17 @@
 <body>
 
 <div class="demo-toggle-bar">
-    <span>מצב המחשה:</span>
-    <button class="demo-btn" id="toggle-premium-btn" onclick="togglePremiumDemo()">סטנדרטי (לא משודרג)</button>
+    <span style="margin-bottom: 2px; font-weight:700;">בחר סוג משתמש להמחשה:</span>
+    <div class="demo-buttons-row">
+        <button class="demo-btn active" id="btn-mode-standard" onclick="setDemoUserMode('standard')">❌ לא מנוי</button>
+        <button class="demo-btn" id="btn-mode-credits" onclick="setDemoUserMode('credits')">💎 מנוי חלקי</button>
+        <button class="demo-btn" id="btn-mode-full" onclick="setDemoUserMode('full')">🚀 מנוי מלא</button>
+    </div>
 </div>
 
 <div class="phone-container">
     <div class="dynamic-island"></div>
 
-    <!-- פופ-אפ חוקים -->
     <div class="modal-overlay" id="rules-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -600,7 +613,6 @@
         </div>
     </div>
 
-    <!-- פופ-אפ הגדרות והתראות (חדש!) -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -643,7 +655,6 @@
         </div>
     </div>
 
-    <!-- פופ-אפ חנות פרימיום מלאה -->
     <div class="modal-overlay" id="premium-store-modal">
         <div class="modal-card" style="border-color: var(--gold);">
             <div class="modal-header">
@@ -672,7 +683,6 @@
         </div>
     </div>
 
-    <!-- פופ-אפ בחירת מספרים -->
     <div class="modal-overlay" id="number-selector-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -695,7 +705,6 @@
         </div>
     </div>
 
-    <!-- פופ-אפ בחירת נבחרת -->
     <div class="modal-overlay" id="team-selector-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -706,7 +715,6 @@
         </div>
     </div>
 
-    <!-- פופ-אפ בחירת שחקן -->
     <div class="modal-overlay" id="scorer-selector-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -719,7 +727,6 @@
 
     <div class="app-content">
         
-        <!-- טאב 1: מסך ניחושים -->
         <div id="tab-predictions" class="tab-content active">
             <div class="app-header">
                 <div class="hints-counter-badge">👑 <span id="hints-counter-val">0</span> יתרת VIP</div>
@@ -755,29 +762,23 @@
             <div class="section-title" id="round-title-display">לוח משחקים: שלב הבתים</div>
             
             <div id="matches-list-container">
-                <!-- שלב הבתים -->
                 <div class="round-section id-round-1 active" id="games-injector-batch-1"></div>
                 
-                <!-- שמינית גמר -->
                 <div class="round-section id-round-2">
                     <p style="text-align:center; font-size:12px; color:var(--muted); padding:30px 10px; line-height:1.5;">שלב שמינית הגמר טרם התחיל. המשחקים יעודכנו אוטומטית בהתאם לעולות מהבתים!</p>
                 </div>
-                <!-- רבע גמר -->
                 <div class="round-section id-round-3">
                     <p style="text-align:center; font-size:12px; color:var(--muted); padding:30px 10px; line-height:1.5;">שלב רבע הגמר יעודכן בהמשך הטורניר!</p>
                 </div>
-                <!-- חצי גמר -->
                 <div class="round-section id-round-4">
                     <p style="text-align:center; font-size:12px; color:var(--muted); padding:30px 10px; line-height:1.5;">שלב חצי הגמר יעודכן בהמשך הטורניר!</p>
                 </div>
-                <!-- הגמר -->
                 <div class="round-section id-round-5">
                     <p style="text-align:center; font-size:12px; color:var(--muted); padding:30px 10px; line-height:1.5;">משחק הגמר הגדול יעודכן בהמשך הטורניר!</p>
                 </div>
             </div>
         </div>
 
-        <!-- טאב 2: מסך דירוג -->
         <div id="tab-leaderboard" class="tab-content">
             <div class="section-title" style="margin-top: 10px;">הקבוצות שלי</div>
             <div class="user-groups-scroller">
@@ -801,7 +802,6 @@
 
     </div>
 
-    <!-- בר ניווט תחתון -->
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-predictions" onclick="switchTab('predictions')">
             <span class="nav-icon">📝</span>
@@ -815,10 +815,13 @@
 </div>
 
 <script>
-    let isPremiumActive = false;
+    // שלושה מצבי משתמש: 'standard', 'credits', 'full'
+    let userVipMode = 'standard'; 
+    let userCreditsBalance = 0;
+    let unlockedMatchesList = []; // רשימת משחקים שהיוזר שילם עליהם קרדיט בודד
     let activeScoreBoxId = null;
 
-    // 30 השחקנים המובילים בלבד למלך השערים - ללא דגלים
+    // 30 מועמדים חמים למלך השערים
     const playersList = [
         "אנטואן גריזמן", "ארלינג הולאנד", "ג'אמאל מוסיאלה", "ג'וד בלינגהאם", "ג'רמי דוקו",
         "דארווין נונייז", "הארי קיין", "ויניסיוס ג'וניור", "כריסטיאנו רונאלדו", "לאמין ימאל",
@@ -827,7 +830,7 @@
         "קיליאן מבאפה", "רודרי", "רומלו לוקאקו", "ריאד מהרז"
     ].sort((a,b) => a.localeCompare(b, 'he'));
 
-    // נבחרות מסוננות (ללא קוראסאו, קונגו נקייה מדמוקרטית)
+    // נבחרות מנוקות וממוינות
     const teamsList = [
         "אוסטרליה 🇦🇺", "אוזבקיסטן 🇺🇿", "אอสטריה 🇦🇹", "אוקראינה", "אורוגוואי 🇺🇾", 
         "איראן 🇮🇷", "אלג'יריה 🇩🇿", "אנגליה", "אקוואדור 🇪🇨", "ארגנטינה 🇦🇷", "ארצות הברית 🇺🇸",
@@ -839,7 +842,7 @@
         "קנדה 🇨🇦", "קטר 🇶🇦", "קולומביה 🇨🇴", "קונגו 🇨🇩", "קרואטיה 🇭🇷", "שוודיה 🇸🇪", "שווייץ 🇨🇭"
     ].sort((a,b) => a.localeCompare(b, 'he'));
 
-    // מאגר משחקי שלב הבתים
+    // מאגר משחקים מלא לשלב הבתים
     const worldCupStage1Matches = [
         { id: "m1", group: "בית א'", home: "קטר", away: "אקוודור", date: "21/11", time: "18:00", ai: "1-2 לאקוודור", pop: "0-2 לאקוודור" },
         { id: "m2", group: "בית א'", home: "סנגל", away: "הולנד", date: "21/11", time: "21:00", ai: "0-2 להולנד", pop: "1-3 להולנד" },
@@ -859,7 +862,7 @@
         { id: "m16", group: "בית ח'", home: "פורטוגל", away: "גאנה", date: "26/11", time: "18:00", ai: "2-0 לפורטוגל", pop: "3-1 לפורטוגל" }
     ];
 
-    // בסיס נתוני דירוג
+    // בסיס נתוני דירוג חברים
     const groupRankingsDatabase = {
         parliament: `
             <div class="player-row"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">שאולי 🍟</span></div><span class="player-score">158</span></div>
@@ -891,13 +894,17 @@
         container.innerHTML = '';
 
         worldCupStage1Matches.forEach((match) => {
+            const isUnlocked = unlockedMatchesList.includes(match.id);
+            // קביעת נראות האייקון של הכפתור: אם המשתמש במנוי מלא או שהמשחק נפתח בקרדיט נראה נורה, אחרת מנעול
+            const lockIcon = (userVipMode === 'full' || isUnlocked) ? '💡' : '🔒';
+
             const card = document.createElement('div');
             card.className = 'match-card';
             card.innerHTML = `
                 <div class="match-meta">
                     <span class="group-heading">${match.group}</span>
                     <span class="match-time">${match.date} • ${match.time}</span>
-                    <button class="btn-vip-lock" onclick="handleVipClickLocal('hint-${match.id}')">🔒</button>
+                    <button class="btn-vip-lock" id="lock-btn-${match.id}" onclick="handleVipClickLocal('hint-${match.id}')">${lockIcon}</button>
                 </div>
                 <div class="match-row">
                     <div class="team-side"><span class="team-name">${match.home}</span></div>
@@ -911,6 +918,87 @@
             `;
             container.appendChild(card);
         });
+    }
+
+    // ניהול סרגל הדמו (3 מצבי המשתמש)
+    function setDemoUserMode(mode) {
+        userVipMode = mode;
+        unlockedMatchesList = []; // איפוס רשימת הרכישות הבודדות
+        
+        document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+        const badge = document.getElementById('hints-counter-val');
+
+        if (mode === 'standard') {
+            document.getElementById('btn-mode-standard').classList.add('active');
+            userCreditsBalance = 0;
+            badge.innerText = "0";
+        } else if (mode === 'credits') {
+            document.getElementById('btn-mode-credits').classList.add('active');
+            userCreditsBalance = 5; // חבילת 5 המלצות VIP כדוגמה למנוי חלקי
+            badge.innerText = userCreditsBalance;
+        } else if (mode === 'full') {
+            document.getElementById('btn-mode-full').classList.add('active');
+            userCreditsBalance = 0;
+            badge.innerText = "אינסוף";
+        }
+
+        // רענון המשחקים כדי לעדכן מנעולים
+        injectStage1Matches();
+    }
+
+    function handleVipClickLocal(boxId) {
+        const box = document.getElementById(boxId);
+        if (!box) return;
+
+        const matchId = boxId.replace('hint-', '');
+        const match = worldCupStage1Matches.find(m => m.id === matchId);
+        const isAlreadyUnlocked = unlockedMatchesList.includes(matchId);
+
+        // אם התיבה פתוחה כרגע - פשוט נסגור אותה
+        if (box.style.display === 'block') {
+            box.style.display = 'none';
+            return;
+        }
+
+        // לוגיקת פתיחה על פי 3 סוגי המשתמשים:
+        if (userVipMode === 'full') {
+            // מצב 1: מנוי מלא - ההמלצה נפתחת חופשי בלחיצה
+            box.style.display = 'block';
+            box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
+        } 
+        else if (userVipMode === 'credits') {
+            // מצב 2: מנוי חלקי (מבוסס קרדיטים)
+            if (isAlreadyUnlocked) {
+                // אם כבר קנה את המשחק הזה בעבר
+                box.style.display = 'block';
+                box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
+            } else {
+                // אם המשחק עדיין נעול - נשאל אותו אם ברצונו לבזבז קרדיט
+                if (userCreditsBalance > 0) {
+                    const confirmUnlock = confirm(`האם ברצונך לפתוח את המלצת ה-VIP למשחק זה בעלות של קרדיט 1?\n(יתרה נוכחית שלך: ${userCreditsBalance})`);
+                    if (confirmUnlock) {
+                        userCreditsBalance--;
+                        document.getElementById('hints-counter-val').innerText = userCreditsBalance;
+                        unlockedMatchesList.push(matchId);
+                        
+                        // שינוי ה-🔒 ל-💡 בלייב
+                        document.getElementById(`lock-btn-${matchId}`).innerText = '💡';
+                        
+                        box.style.display = 'block';
+                        box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
+                    }
+                } else {
+                    // נגמרו הקרדיטים - נציג לו את כפתור הרכישה שיוביל לחנות
+                    box.style.display = 'block';
+                    box.innerHTML = `<p style="font-size:11px; color:#FF8008; margin-bottom:4px;">⚠️ אזלו לך הקרדיטים בחבילה!</p><button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש קרדיטים נוספים בחנות</button>`;
+                }
+            }
+        } 
+        else {
+            // מצב 3: משתמש רגיל (לא מנוי) - מוצג כפתור רכישה בלבד המוביל לחנות המלאה
+            box.style.display = 'block';
+            box.innerHTML = `<button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש מנוי VIP עכשיו</button>`;
+        }
     }
 
     function filterRoundLocal(roundNum) {
@@ -990,49 +1078,6 @@
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    function togglePremiumDemo() {
-        isPremiumActive = !isPremiumActive;
-        const btn = document.getElementById('toggle-premium-btn');
-        const counter = document.getElementById('hints-counter-val');
-        const locks = document.querySelectorAll('.btn-vip-lock');
-        
-        if (isPremiumActive) {
-            btn.innerText = "VIP פתוח";
-            btn.style.background = "#00FF9D";
-            counter.innerText = "אינסוף";
-            locks.forEach(l => l.innerText = "💡");
-        } else {
-            btn.innerText = "סטנדרטי (לא משודרג)";
-            btn.style.background = "#FFC837";
-            counter.innerText = "0";
-            locks.forEach(l => l.innerText = "🔒");
-        }
-        
-        worldCupStage1Matches.forEach(m => {
-            const box = document.getElementById('hint-' + m.id);
-            if(box) box.style.display = 'none';
-        });
-    }
-
-    function handleVipClickLocal(boxId) {
-        const box = document.getElementById(boxId);
-        if (!box) return;
-
-        const matchId = boxId.replace('hint-', '');
-        const match = worldCupStage1Matches.find(m => m.id === matchId);
-
-        if (box.style.display === 'block') {
-            box.style.display = 'none';
-        } else {
-            box.style.display = 'block';
-            if (isPremiumActive) {
-                box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
-            } else {
-                box.innerHTML = `<button class="premium-upgrade-link-btn" onclick="openModal('premium-store-modal')">👑 רכוש מנוי VIP עכשיו</button>`;
-            }
-        }
-    }
 
     function buyBundle(name) {
         alert('רכישת חבילת ' + name + ' בוצעה בהצלחה!');
