@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WORLD CUP - Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- חיבור ספריות ה-SDK הרשמיות של Supabase לעבודה בלייב -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg: #0A0E14;
+            --card: #111823;
+            --accent: #00FF9D;
+            --gold: #FFC837;
+            --text: #FFFFFF;
+            --muted: #8F9CAE;
+            --border: #1F2C3F;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Rubik', sans-serif;
+            letter-spacing: -0.1px;
+        }
+
+        body {
+            background-color: #030609;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        /* מסך התחברות חוסם */
+        .login-screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #0A0E14;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #FFF;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 35px;
+            line-height: 1.5;
+            max-width: 280px;
+        }
+
+        .btn-google-login {
+            width: 100%;
+            max-width: 280px;
+            background: #FFFFFF;
+            color: #111823;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+            transition: transform 0.2s;
+        }
+
+        .btn-google-login:active {
+            transform: scale(0.98);
+        }
+
+        .btn-google-login img {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* מבנה האפליקציה הראשי */
+        .demo-toggle-bar {
+            margin-bottom: 12px;
+            background: #111823;
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            z-index: 1000;
+            width: 100%;
+            max-width: 412px;
+        }
+        .demo-buttons-row {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+        }
+        .demo-btn {
+            flex: 1;
+            background: #1F2C3F;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 6px 4px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .demo-btn.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 412px;
+            height: 892px;
+            background-color: var(--bg);
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 8px solid #1F2530;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .dynamic-island {
+            width: 110px;
+            height: 30px;
+            background: #000;
+            border-radius: 20px;
+            margin: 10px auto 0 auto;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 50px 16px 90px 16px;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-buttons-group { display: flex; gap: 6px; }
+
+        .hints-counter-badge {
+            background: rgba(255, 200, 55, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-header-action {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: #FFF;
+            padding: 6px 10px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rounds-navigation {
+            display: flex;
+            background: #0D1420;
+            padding: 4px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            gap: 4px;
+        }
+        .rounds-navigation::-webkit-scrollbar { display: none; }
+        
+        .round-nav-btn {
+            flex: 1;
+            min-width: 75px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: 8px 4px;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .round-nav-btn.active {
+            background: var(--card);
+            color: var(--accent);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .champions-selection {
+            background: linear-gradient(135deg, #16222F, #0D1420);
+            border: 1px solid rgba(255, 200, 55, 0.25);
+            border-radius: 20px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .champ-box {
+            flex: 1;
+            background: rgba(255,255,255,0.01);
+            border-radius: 14px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .champ-box span {
+            display: block;
+            font-size: 10px;
+            color: var(--gold);
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .champ-img-container {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 6px auto;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            overflow: hidden;
+            background: #111823;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .champ-name {
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .section-title {
+            font-size: 15px;
+            color: #FFF;
+            margin: 15px 0 10px 0;
+            font-weight: 700;
+        }
+
+        .group-heading {
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(0, 255, 157, 0.05);
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 6px;
+            margin-top: 14px;
+            font-weight: 700;
+        }
+
+        .match-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .match-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .match-time {
+            color: #E2E8F0;
+            background: rgba(255,255,255,0.03);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 10px;
+        }
+
+        .match-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .team-name {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            color: #FFF;
+        }
+
+        .score-box {
+            width: 42px;
+            height: 42px;
+            background: #0D1420;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-vip-lock {
+            background: none;
+            border: 1px solid rgba(255, 200, 55, 0.4);
+            color: var(--gold);
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-lock-prediction {
+            width: 100%;
+            background: rgba(0, 255, 157, 0.08);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            color: var(--accent);
+            padding: 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .vip-unlocked-box {
+            display: none;
+            background: rgba(0, 255, 157, 0.05);
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            padding: 10px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #E2E8F0;
+        }
+
+        .premium-upgrade-link-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(90deg, #FFC837, #FF8008);
+            color: #000;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 11px;
+            margin-top: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .user-groups-scroller {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 0 16px 0;
+            margin-bottom: 8px;
+        }
+        .user-groups-scroller::-webkit-scrollbar { display: none; }
+
+        .user-group-tab-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 16px;
+            min-width: 140px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .user-group-tab-card.active {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, #111823 0%, rgba(0,255,157,0.04) 100%);
+        }
+        .user-group-tab-card h4 { font-size: 13px; font-weight: 700; color: #FFF; margin-bottom: 2px; }
+        .user-group-tab-card span { font-size: 11px; color: var(--muted); }
+
+        .leaderboard-list { display: flex; flex-direction: column; gap: 8px; }
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 14px;
+        }
+        .player-row.me {
+            border-color: var(--accent);
+            background: linear-gradient(90deg, rgba(0,255,157,0.04), transparent);
+        }
+        .player-info { display: flex; align-items: center; gap: 10px; }
+        .rank-num {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 11px; font-weight: 700; background: #1F2C3F;
+        }
+        .rank-1 { background: #FFC837; color: #000; }
+        .rank-2 { background: #C0C0C0; color: #000; }
+        .rank-3 { background: #CD7F32; color: #000; }
+        .player-name { font-size: 13px; font-weight: 600; color: #FFF; }
+        .player-score { font-size: 15px; font-weight: 800; }
+
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-card {
+            background: #111823;
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 22px;
+            width: 100%;
+            max-height: 85%;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+        .btn-close-modal { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+        
+        .bottom-nav {
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 72px;
+            background-color: #0C121A; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center; z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--muted); font-size: 11px; cursor: pointer; gap: 4px; flex: 1; font-weight: 600;
+        }
+        .nav-item.active { color: var(--accent); }
+        .nav-icon { font-size: 20px; }
+
+        .round-section { display: none; }
+        .round-section.active { display: block; }
+
+        .selector-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 15px 5px;
+            background: #0D1420;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+        .selector-num-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: #FFF;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .selection-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .selection-list-item:hover { border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="demo-toggle-bar">
+    <span style="margin-bottom: 2px; font-weight:700;">בחר סוג משתמש להמחשה:</span>
+    <div class="demo-buttons-row">
+        <button class="demo-btn active" id="btn-mode-standard" onclick="setDemoUserMode('standard')">❌ לא מנוי</button>
+        <button class="demo-btn" id="btn-mode-credits" onclick="setDemoUserMode('credits')">💎 מנוי חלקי</button>
+        <button class="demo-btn" id="btn-mode-full" onclick="setDemoUserMode('full')">🚀 מנוי מלא</button>
+    </div>
+</div>
+
+<div class="phone-container">
+    <div class="dynamic-island"></div>
+
+    <!-- 🔒 מסך לוגין נעול באמצעות גוגל -->
+    <div class="login-screen" id="app-login-screen-overlay">
+        <div class="login-logo">🏆</div>
+        <h2 class="login-title">WORLD CUP PREDICTOR</h2>
+        <p class="login-subtitle">הפרלמנט של החבר'ה עובר לזמן אמת. כנס וקח את ההובלה!</p>
+        <button class="btn-google-login" onclick="loginWithGoogleFromApp()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+            התחבר באמצעות Google
+        </button>
+    </div>
+
+    <!-- פופ-אפ חוקים -->
+    <div class="modal-overlay" id="rules-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--accent);">📜 מדריך חוקי הטורניר</h3>
+                <button class="btn-close-modal" onclick="closeModal('rules-modal')">&times;</button>
+            </div>
+            <p style="font-size:13px; line-height:1.6; color:#FFF; margin-top:10px;">תוצאה מדויקת: <strong>3 נקודות</strong><br>כיוון (מנצחת/תיקו): <strong>1 נקודה</strong></p>
+        </div>
+    </div>
+
+    <!-- פופ-אפ בחירת מספרים -->
+    <div class="modal-overlay" id="number-selector-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--accent);">בחר תוצאה</h3>
+                <button class="btn-close-modal" onclick="closeModal('number-selector-modal')">&times;</button>
+            </div>
+            <div class="selector-row">
+                <button class="selector-num-btn" onclick="selectNumberValue(0)">0</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(1)">1</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(2)">2</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(3)">3</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(4)">4</button>
+                <button class="selector-num-btn" onclick="selectNumberValue(5)">5</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- פופ-אפ בחירת נבחרת -->
+    <div class="modal-overlay" id="team-selector-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--gold);">🏆 בחר נבחרת מנצחת</h3>
+                <button class="btn-close-modal" onclick="closeModal('team-selector-modal')">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column;" id="teams-list-injection-container"></div>
+        </div>
+    </div>
+
+    <!-- פופ-אפ בחירת שחקן -->
+    <div class="modal-overlay" id="scorer-selector-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-weight:800; font-size:16px; color:var(--gold);">⚽ בחר מלך שערים</h3>
+                <button class="btn-close-modal" onclick="closeModal('scorer-selector-modal')">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column;" id="scorers-list-injection-container"></div>
+        </div>
+    </div>
+
+    <div class="app-content">
+        
+        <!-- טאב 1: מסך ניחושים -->
+        <div id="tab-predictions" class="tab-content active">
+            <div class="app-header">
+                <div class="hints-counter-badge">👑 <span id="hints-counter-val">0</span> יתרת VIP</div>
+                <div class="header-buttons-group">
+                    <button class="btn-header-action" onclick="logoutFromApp()" style="background:rgba(255,0,0,0.15); color:#FF5252; border-color:rgba(255,0,0,0.2);">יציאה 🚪</button>
+                    <button class="btn-header-action" onclick="openModal('rules-modal')">📜 חוקים</button>
+                </div>
+            </div>
+
+            <div class="champions-selection">
+                <div class="champ-box" onclick="openTeamSelector()">
+                    <span>🏆 המנצחת שלי</span>
+                    <div class="champ-img-container" id="global-selected-team-flag">🇦🇷</div>
+                    <div class="champ-name" id="global-selected-team-name">ארגנטינה</div>
+                    <button class="btn-lock-prediction" style="padding:2px; font-size:9px; margin-top:4px;" id="btn-lock-team-global" onclick="saveGlobalPredictionLocal(event, 'team')">🔒 שמור בשרת</button>
+                </div>
+                <div class="champ-box" onclick="openScorerSelector()">
+                    <span>⚽ מלך השערים</span>
+                    <div class="champ-img-container" id="global-selected-scorer-flag">🏃‍♂️</div>
+                    <div class="champ-name" id="global-selected-scorer-name">ליונל מסי</div>
+                    <button class="btn-lock-prediction" style="padding:2px; font-size:9px; margin-top:4px;" id="btn-lock-scorer-global" onclick="saveGlobalPredictionLocal(event, 'scorer')">🔒 שמור בשרת</button>
+                </div>
+            </div>
+
+            <div class="rounds-navigation">
+                <button class="round-nav-btn active" id="btn-r1" onclick="filterRoundLocal(1)">שלב הבתים</button>
+            </div>
+
+            <div class="section-title" id="round-title-display">לוח משחקים: שלב הבתים</div>
+            <div id="matches-list-container">
+                <div class="round-section id-round-1 active" id="games-injector-batch-1"></div>
+            </div>
+        </div>
+
+        <!-- טאב 2: מסך דירוג -->
+        <div id="tab-leaderboard" class="tab-content">
+            <div class="section-title" id="leaderboard-title">טבלת הדירוג: הפרלמנט</div>
+            <div class="leaderboard-list" id="dynamic-leaderboard"></div>
+        </div>
+
+    </div>
+
+    <!-- בר ניווט תחתון -->
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-predictions" onclick="switchTab('predictions')">
+            <span class="nav-icon">📝</span>
+            <span>ניחושים</span>
+        </div>
+        <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')">
+            <span class="nav-icon">🏆</span>
+            <span>דירוג</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://bkudwbvudclnhlfxqdyi.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_COAkdRbcmMWrMk0x9eWyrg_nzYnGJz0";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // משתנה גלובלי שיחזיק את מזהה המשתמש המחובר מגוגל
+    let CURRENT_USER_ID = null;
+
+    let userVipMode = 'standard'; 
+    let userCreditsBalance = 0;
+    let unlockedMatchesList = []; 
+    let activeScoreBoxId = null;
+
+    const playersList = ["ארלינג הולאנד", "ג'וד בלינגהאם", "הארי קיין", "ויניסיוס ג'וניור", "כריסטיאנו רונאלדו", "לאמין ימאל", "ליונל מסי", "קי利אן מבאפה"].sort();
+    const teamsList = ["אנגליה", "אקוואדור 🇪🇨", "ארגנטינה 🇦🇷", "ברזיל 🇧🇷", "גרמניה 🇩🇪", "הולנד 🇳🇱", "ספרד 🇪🇸", "צרפת 🇫🇷"].sort();
+
+    const worldCupStage1Matches = [
+        { id: "m1", group: "בית א'", home: "קטר", away: "אקוודור", date: "21/11", time: "18:00", ai: "1-2 לאקוודור", pop: "0-2 לאקוודור" },
+        { id: "m2", group: "בית א'", home: "סנגל", away: "הולנד", date: "21/11", time: "21:00", ai: "0-2 להולנד", pop: "1-3 להולנד" }
+    ];
+
+    // 🚀 פונקציית התחברות באמצעות גוגל
+    async function loginWithGoogleFromApp() {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                // שינינו לכתובת קבועה ומדויקת כדי למנוע את שגיאת השרת
+                redirectTo: 'https://worldcup-predictor-t021.onrender.com' 
+            }
+        });
+        if (error) alert('שגיאה בהתחברות לגוגל: ' + error.message);
+    }
+
+    // פונקציית יציאה מהחשבון
+    async function logoutFromApp() {
+        await supabaseClient.auth.signOut();
+        document.getElementById('app-login-screen-overlay').style.display = 'flex';
+        CURRENT_USER_ID = null;
+    }
+
+    // 🔄 פונקציה שבודקת האם יש יוזר מחובר כשהדף נטען
+    async function checkUserSessionOnLoad() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (session && session.user) {
+            // המשתמש מחובר! נעלים את מסך הלוגין ונשמור את ה-ID האמיתי שלו
+            document.getElementById('app-login-screen-overlay').style.display = 'none';
+            CURRENT_USER_ID = session.user.id;
+            
+            // יצירה או עדכון פרופיל המשתמש בטבלת profiles באופן אוטומטי
+            await supabaseClient.from('profiles').upsert({
+                id: CURRENT_USER_ID,
+                username: session.user.user_metadata.full_name || 'שחקן אלמוני'
+            });
+
+            // טעינת ההימורים הקודמים שלו מהשרת כדי להציג לו אותם
+            loadUserSavedPredictionsFromDatabase();
+        } else {
+            // אין משתמש מחובר — נשאיר את מסך הלוגין נעול
+            document.getElementById('app-login-screen-overlay').style.display = 'flex';
+        }
+    }
+
+    // 📊 פונקציה שמושכת את כל ההימורים הקודמים של המשתמש מ-Supabase ומציגה אותם בתיבות
+    async function loadUserSavedPredictionsFromDatabase() {
+        if(!CURRENT_USER_ID) return;
+
+        const { data: dbPredictions, error } = await supabaseClient
+            .from('predictions')
+            .select('*')
+            .eq('user_id', CURRENT_USER_ID);
+
+        if (dbPredictions && !error) {
+            dbPredictions.forEach(pred => {
+                const homeBox = document.getElementById(`box-${pred.match_id}-home`);
+                const awayBox = document.getElementById(`box-${pred.match_id}-away`);
+                if(homeBox) homeBox.innerText = pred.home_score;
+                if(awayBox) awayBox.innerText = pred.away_score;
+            });
+        }
+    }
+
+    function injectStage1Matches() {
+        const container = document.getElementById('games-injector-batch-1');
+        if(!container) return;
+        container.innerHTML = '';
+
+        worldCupStage1Matches.forEach((match) => {
+            const isUnlocked = unlockedMatchesList.includes(match.id);
+            const lockIcon = (userVipMode === 'full' || isUnlocked) ? '💡' : '🔒';
+
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `
+                <div class="match-meta">
+                    <span class="group-heading">${match.group}</span>
+                    <span class="match-time">${match.date} • ${match.time}</span>
+                    <button class="btn-vip-lock" id="lock-btn-${match.id}" onclick="handleVipClickLocal('hint-${match.id}')">${lockIcon}</button>
+                </div>
+                <div class="match-row">
+                    <div class="team-side"><span class="team-name">${match.home}</span></div>
+                    <div class="score-box" id="box-${match.id}-home" onclick="openNumberSelector('box-${match.id}-home')">-</div>
+                    <span>:</span>
+                    <div class="score-box" id="box-${match.id}-away" onclick="openNumberSelector('box-${match.id}-away')">-</div>
+                    <div class="team-side"><span class="team-name">${match.away}</span></div>
+                </div>
+                <button class="btn-lock-prediction" onclick="saveMatchPredictionToSupabase('${match.id}')">🔒 נעל הימור בשרת</button>
+                <div class="vip-unlocked-box hint-box-class" id="hint-${match.id}"></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // 🎯 שמירה לשרת באמצעות ה-UUID האמיתי של גוגל!
+    async function saveMatchPredictionToSupabase(matchId) {
+        if (!CURRENT_USER_ID) {
+            alert('אינך מחובר לחשבון!');
+            return;
+        }
+
+        const homeScoreText = document.getElementById(`box-${matchId}-home`).innerText;
+        const awayScoreText = document.getElementById(`box-${matchId}-away`).innerText;
+
+        if (homeScoreText === '-' || awayScoreText === '-') {
+            alert('אנא בחר תוצאה לשתי הקבוצות לפני השמירה!');
+            return;
+        }
+
+        const { error } = await supabaseClient
+            .from('predictions')
+            .upsert({
+                user_id: CURRENT_USER_ID, // כאן נכנס מזהה הגוגל האמיתי
+                match_id: matchId,
+                home_score: parseInt(homeScoreText),
+                away_score: parseInt(awayScoreText)
+            }, { onConflict: 'user_id,match_id' });
+
+        if (error) {
+            alert('שגיאה בשמירה לשרת: ' + error.message);
+        } else {
+            alert('🎯 הניחוש שלך ננעל בהצלחה בטבלת ה-Database תחת חשבון הגוגל שלך!');
+        }
+    }
+
+    async function saveGlobalPredictionLocal(event, type) {
+        if (!CURRENT_USER_ID) return;
+        event.stopPropagation();
+        let updateData = {};
+
+        if (type === 'team') {
+            updateData = { champion_team: document.getElementById('global-selected-team-name').innerText };
+        } else {
+            updateData = { top_scorer: document.getElementById('global-selected-scorer-name').innerText };
+        }
+
+        const { error } = await supabaseClient
+            .from('profiles')
+            .upsert({ id: CURRENT_USER_ID, ...updateData });
+
+        if (error) alert('שגיאה בשמירה: ' + error.message);
+        else alert('🏆 הבחירה הכללית סונכרנה בהצלחה לפרופיל שלך!');
+    }
+
+    async function setDemoUserMode(mode) {
+        if(!CURRENT_USER_ID) return;
+        userVipMode = mode;
+        unlockedMatchesList = [];
+        const badge = document.getElementById('hints-counter-val');
+
+        await supabaseClient.from('profiles').upsert({
+            id: CURRENT_USER_ID,
+            user_mode: mode,
+            credits_balance: mode === 'credits' ? 5 : 0
+        });
+
+        if (mode === 'standard') {
+            document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-mode-standard').classList.add('active');
+            userCreditsBalance = 0; badge.innerText = "0";
+        } else if (mode === 'credits') {
+            document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-mode-credits').classList.add('active');
+            userCreditsBalance = 5; badge.innerText = userCreditsBalance;
+        } else if (mode === 'full') {
+            document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-mode-full').classList.add('active');
+            userCreditsBalance = 0; badge.innerText = "אינסוף";
+        }
+        injectStage1Matches();
+    }
+
+    async function handleVipClickLocal(boxId) {
+        const box = document.getElementById(boxId);
+        if (!box || !CURRENT_USER_ID) return;
+
+        const matchId = boxId.replace('hint-', '');
+        const match = worldCupStage1Matches.find(m => m.id === matchId);
+        const isAlreadyUnlocked = unlockedMatchesList.includes(matchId);
+
+        if (box.style.display === 'block') { box.style.display = 'none'; return; }
+
+        if (userVipMode === 'full') {
+            box.style.display = 'block';
+            box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
+        } else if (userVipMode === 'credits' && !isAlreadyUnlocked) {
+            if (userCreditsBalance > 0) {
+                if (confirm(`לפתוח המלצה בעלות קרדיט 1?`)) {
+                    userCreditsBalance--;
+                    document.getElementById('hints-counter-val').innerText = userCreditsBalance;
+                    unlockedMatchesList.push(matchId);
+                    
+                    await supabaseClient.from('predictions').upsert({
+                        user_id: CURRENT_USER_ID,
+                        match_id: matchId,
+                        vip_unlocked: true
+                    }, { onConflict: 'user_id,match_id' });
+
+                    document.getElementById(`lock-btn-${matchId}`).innerText = '💡';
+                    box.style.display = 'block';
+                    box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
+                }
+            } else {
+                box.style.display = 'block';
+                box.innerHTML = `<p style="color:#FF8008; font-size:11px;">⚠️ אזלו הקרדיטים בחבילה!</p>`;
+            }
+        } else if (isAlreadyUnlocked || userVipMode === 'credits') {
+            box.style.display = 'block';
+            box.innerHTML = `🤖 <strong>המלצת AI:</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> ${match.pop}`;
+        } else {
+            box.style.display = 'block';
+            box.innerHTML = `<p style="color:#FFC837; font-size:11px;">🔒 המלצה זו נעולה למנויי VIP בלבד</p>`;
+        }
+    }
+
+    const groupRankingsDatabase = {
+        parliament: `<div class="player-row me"><div class="player-info"><span class="rank-num rank-1">1</span><span class="player-name">אתה ⭐</span></div><span class="player-score">0</span></div>`
+    };
+
+    function filterRoundLocal(roundNum) { injectStage1Matches(); }
+    function openNumberSelector(boxId) { activeScoreBoxId = boxId; openModal('number-selector-modal'); }
+    function selectNumberValue(val) { if(activeScoreBoxId) document.getElementById(activeScoreBoxId).innerText = val; closeModal('number-selector-modal'); }
+
+    function openTeamSelector() {
+        const container = document.getElementById('teams-list-injection-container'); container.innerHTML = '';
+        teamsList.forEach(t => {
+            const item = document.createElement('div'); item.className = 'selection-list-item'; item.innerText = t;
+            item.onclick = function() {
+                document.getElementById('global-selected-team-name').innerText = t;
+                closeModal('team-selector-modal');
+            };
+            container.appendChild(item);
+        });
+        openModal('team-selector-modal');
+    }
+
+    function openScorerSelector() {
+        const container = document.getElementById('scorers-list-injection-container'); container.innerHTML = '';
+        playersList.forEach(p => {
+            const item = document.createElement('div'); item.className = 'selection-list-item'; item.innerText = p;
+            item.onclick = function() {
+                document.getElementById('global-selected-scorer-name').innerText = p;
+                closeModal('scorer-selector-modal');
+            };
+            container.appendChild(item);
+        });
+        openModal('scorer-selector-modal');
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
+        document.getElementById('nav-' + tabName).classList.add('active');
+        if(tabName === 'leaderboard') document.getElementById('dynamic-leaderboard').innerHTML = groupRankingsDatabase['parliament'];
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    window.onload = function() {
+        injectStage1Matches();
+        document.getElementById('dynamic-leaderboard').innerHTML = groupRankingsDatabase['parliament'];
+        // הפעלת בדיקת החיבור האוטומטית מגוגל
+        checkUserSessionOnLoad();
+    };
+</script>
+</body>
+</html>
