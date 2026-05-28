@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>WORLD CUP - Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg: #0A0E14;
+            --card: #111823;
+            --accent: #00FF9D;
+            --gold: #FFC837;
+            --text: #FFFFFF;
+            --muted: #8F9CAE;
+            --border: #1F2C3F;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rubik', sans-serif; letter-spacing: -0.1px; }
+        body { background-color: #030609; color: var(--text); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; -webkit-tap-highlight-color: transparent; }
+
+        /* 📱 מסך לוגין מפוצל ומקצועי חסין בעיות מגע ואימות בניידים */
+        .login-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #0A0E14; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; pointer-events: auto; }
+        .login-logo { font-size: 48px; margin-bottom: 10px; }
+        .login-title { font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px; }
+        .login-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 35px; line-height: 1.5; max-width: 280px; }
+        
+        .login-actions-box { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
+        .btn-app-login-choice { width: 100%; border: none; padding: 14px 20px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: transform 0.2s; pointer-events: auto; }
+        .btn-app-login-choice:active { transform: scale(0.98); }
+        .btn-app-login-choice.primary { background: #FFFFFF; color: #111823; }
+        .btn-app-login-choice.secondary { background: rgba(255,255,255,0.05); color: #FFFFFF; border: 1px solid var(--border); }
+        .btn-app-login-choice img { width: 18px; height: 18px; }
+
+        /* Onboarding Overlay */
+        .onboarding-screen { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #0A0E14; z-index: 1500; display: none; flex-direction: column; padding: 24px; text-align: center; }
+        .onboarding-header { display: flex; justify-content: flex-end; width: 100%; }
+        .btn-skip-onboarding { background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+        .onboarding-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; }
+        .onboarding-mock-image { width: 280px; height: 130px; background: #111823; border: 2px solid var(--border); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px; overflow: hidden; }
+        .onboarding-title { font-size: 18px; font-weight: 800; color: #FFF; }
+        .onboarding-desc { font-size: 13px; color: var(--muted); line-height: 1.4; max-width: 310px; }
+        .onboarding-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; }
+        .dot { width: 8px; height: 8px; background: #1F2C3F; border-radius: 50%; transition: .3s; }
+        .dot.active { width: 24px; background: var(--accent); border-radius: 4px; }
+        .btn-next-onboarding { width: 100%; background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; }
+
+        .phone-container { width: 100%; max-width: 412px; height: 892px; background-color: var(--bg); border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 8px solid #1F2530; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        .dynamic-island { width: 110px; height: 30px; background: #000; border-radius: 20px; margin: 10px auto 0 auto; position: absolute; left: 50%; transform: translateX(-50%); z-index: 10; }
+        .app-content { flex: 1; overflow-y: auto; padding: 50px 16px 90px 16px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* כפתורי ניווט עליונים עדינים ומיושרים בגודל המקורי */
+        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%; }
+        .header-buttons-group { display: flex; gap: 4px; align-items: center; }
+        .hints-counter-badge { background: rgba(255, 200, 55, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; height: 26px; line-height: 1; white-space: nowrap; }
+        .btn-header-action { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #FFF; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; height: 26px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+
+        /* דאשבורד ממורכז */
+        .user-stats-dashboard { background: #111823; border: 1px solid var(--border); border-radius: 18px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 14px; text-align: center; }
+        .stat-item-box span { display: block; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+        .stat-item-box strong { font-size: 18px; color: var(--accent); font-weight: 800; }
+
+        /* כרטיסיות קבוצות - עיצוב דמו נקי */
+        .group-item-row-card { background: linear-gradient(135deg, #16222F, #0D1420); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; text-align: right; cursor: pointer; transition: .15s; }
+        .group-item-row-card.active { border-color: var(--accent); background: linear-gradient(135deg, #1A293A, #0D1420); }
+        .group-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .main-group-tag { background: var(--accent); color: #000; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+        .btn-set-main-group { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--gold); font-size: 9px; padding: 2px 6px; border-radius: 5px; cursor: pointer; font-weight: 700; }
+        
+        .rounds-navigation { display: flex; background: #0D1420; padding: 4px; border-radius: 14px; margin-bottom: 14px; border: 1px solid var(--border); overflow-x: auto; gap: 4px; }
+        .rounds-navigation::-webkit-scrollbar { display: none; }
+        .round-nav-btn { flex: 1; min-width: 78px; background: none; border: none; color: var(--muted); padding: 8px 4px; font-size: 11px; font-weight: 700; border-radius: 10px; cursor: pointer; white-space: nowrap; }
+        .round-nav-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        /* קופסאות האלופים - מניעת הסתרה */
+        .champions-selection { background: #111823; border: 1px solid var(--border); border-radius: 20px; padding: 12px; margin-bottom: 16px; display: flex; gap: 12px; }
+        .champ-box-wrapper { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .champ-box { background: rgba(255,255,255,0.01); border-radius: 14px; padding: 8px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .champ-box span { display: block; font-size: 10px; color: var(--gold); font-weight: 700; margin-bottom: 2px; }
+        .champ-img-container { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: #0D1420; display: flex; justify-content: center; align-items: center; font-size: 16px; margin-bottom: 4px; }
+        .champ-name { font-size: 11px; font-weight: 700; color: #FFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+
+        .groups-management-card { background: #111823; border: 1px solid var(--border); border-radius: 20px; padding: 14px; margin-bottom: 14px; text-align: center; }
+        .btn-create-group { background: var(--accent); color: #000; border: none; padding: 10px 16px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 8px; width: 100%; }
+        .share-link-box { background: rgba(0,0,0,0.4); border: 1px dashed var(--accent); padding: 6px; border-radius: 8px; font-size: 10px; color: var(--accent); cursor: pointer; word-break: break-all; text-align: center; }
+
+        /* כפתור נעילת הימור - מרווח תקין */
+        .btn-lock-prediction { width: 100%; background: rgba(0, 255, 157, 0.08); border: 1px solid rgba(0, 255, 157, 0.3); color: var(--accent); padding: 8px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-top: 12px; cursor: pointer; }
+        .section-title { font-size: 14px; color: #FFF; margin: 12px 0 8px 0; font-weight: 700; }
+        .group-heading { font-size: 10px; color: var(--accent); background: rgba(0, 255, 157, 0.05); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 4px; font-weight: 700; }
+        
+        .match-card { background-color: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px; margin-bottom: 10px; }
+        .match-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+        .match-time { color: #E2E8F0; background: rgba(255,255,255,0.03); padding: 2px 6px; border-radius: 6px; font-size: 10px; }
+        .match-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .team-side { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .team-name { font-size: 13px; font-weight: 600; text-align: center; color: #FFF; }
+        
+        .score-box { width: 42px; height: 42px; background: #0D1420; border: 1px solid var(--border); border-radius: 12px; text-align: center; color: white; font-size: 16px; font-weight: 700; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .btn-vip-lock { background: none; border: 1px solid rgba(255, 200, 55, 0.4); color: var(--gold); width: 34px; height: 34px; border-radius: 10px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .vip-unlocked-box { display: none; background: rgba(0, 255, 157, 0.05); border: 1px solid rgba(0, 255, 157, 0.2); padding: 10px; border-radius: 12px; margin-top: 10px; font-size: 12px; line-height: 1.6; color: #E2E8F0; }
+
+        .leaderboard-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .player-row { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--border); padding: 12px 14px; border-radius: 14px; }
+        .player-row.me { border-color: var(--accent); background: linear-gradient(90deg, rgba(0,255,157,0.04), transparent); }
+        .player-info { display: flex; align-items: center; gap: 10px; }
+        .rank-num { width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: 700; background: #1F2C3F; }
+        .player-name { font-size: 13px; font-weight: 600; color: #FFF; }
+        .player-score { font-size: 14px; font-weight: 800; }
+
+        .modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .modal-card { background: #111823; border: 1px solid var(--border); border-radius: 28px; padding: 22px; width: 100%; max-height: 85%; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+        .btn-close-modal { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+
+        .app-custom-input { width: 100%; background: #0D1420; border: 1px solid var(--border); padding: 14px; border-radius: 14px; color: #FFF; font-size: 14px; margin-top: 10px; outline: none; text-align: center; }
+        .btn-modal-primary { width: 100%; background: var(--accent); color: #000; font-weight: 700; padding: 14px; border-radius: 14px; border: none; cursor: pointer; margin-top: 12px; font-size: 14px; text-align: center; text-decoration: none; display: block; }
+
+        .pricing-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; text-align: right; }
+        .price-card { background: #0D1420; border: 1px solid var(--border); padding: 12px 16px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .price-card.featured { border-color: var(--gold); background: rgba(255,200,55,0.02); }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div class="dynamic-island"></div>
+
+    <div class="login-screen" id="app-login-screen-overlay">
+        <div class="login-logo">🏆</div>
+        <h2 class="login-title">WORLD CUP PREDICTOR</h2>
+        <p class="login-subtitle">הפרלמנט של החבר'ה עובר לזמן אמת. כנס וקח את ההובלה!</p>
+        
+        <div class="login-actions-box">
+            <button class="btn-app-login-choice primary" onclick="handleAuthActionFromApp('login')">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google">
+                התחברות למשתמש קיים
+            </button>
+            <button class="btn-app-login-choice secondary" onclick="handleAuthActionFromApp('register')">
+                הרשמה משתמש חדש
+            </button>
+        </div>
+    </div>
+
+    <div class="onboarding-screen" id="app-onboarding-overlay">
+        <div class="onboarding-header"><button class="btn-skip-onboarding" onclick="finishOnboarding()">דלג ⏭️</button></div>
+        <div class="onboarding-body" id="onboarding-content-area"></div>
+        <div><div class="onboarding-dots" id="onboarding-dots-area"></div><button class="btn-next-onboarding" id="btn-next-onboard-action" onclick="nextOnboardingStep()">הבא ➡️</button></div>
+    </div>
+
+    <div class="modal-overlay" id="profile-settings-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3 style="font-weight:800; font-size:16px; color:var(--text);">בחר שם משתמש</h3></div>
+            <input type="text" class="app-custom-input" id="input-user-nickname-field" placeholder="הזן שם משתמש...">
+            <button class="btn-modal-primary" onclick="submitSaveUserNickname()">שמור</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="rules-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3 style="font-weight:800; font-size:16px; color:var(--accent);">📜 חוקי הטורניר הרשמיים</h3><button class="btn-close-modal" onclick="closeModal('rules-modal')">&times;</button></div>
+            <div style="font-size:13px; line-height:1.7; color:#E2E8F0; margin-top:10px; text-align:right;">
+                <p style="margin-bottom:8px;">🎯 <strong>תוצאה מדויקת (3 נקודות):</strong> פגיעה בול בתוצאת המשחק (למשל: ניחשת 1-2 ונגמר 1-2).</p>
+                <p style="margin-bottom:8px;">⚽ <strong>כיוון תוצאה (1 נקודה):</strong> ניחוש נכון של המנצחת או תיקו (למשל: ניחשת 0-2 ונגמר 1-3).</p>
+                <p style="margin-bottom:8px;">❌ <strong>טעות מלאה (0 נקודות):</strong> אי פגיעה בכיוון או בתוצאה.</p>
+                <hr style="border:none; border-top:1px solid var(--border); margin:12px 0;">
+                <p style="font-weight:700; color:var(--gold);">🏆 בונוסים כלליים (בסוף הטורניר):</p>
+                <p>• נבחרת מנצחת נכונה: <strong>10 נקודות</strong></p>
+                <p>• מלך שערים נכון: <strong>10 נקודות</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="premium-shop-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3 style="font-weight:800; font-size:16px; color:var(--gold);">🛒 חנות קרדיטים פרימיום</h3><button class="btn-close-modal" onclick="closeModal('premium-shop-modal')">&times;</button></div>
+            <p style="font-size:12px; color:var(--muted); line-height:1.5;">הקרדיטים שלך אזלו! רכוש חבילה כדי להמשיך לפתוח את מודלי ה-AI וחוכמת ההמונים המשוקללת:</p>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <div><strong style="color:#FFF; font-size:14px;">🪙 חבילת קפאין (רמז בודד)</strong><p style="font-size:11px; color:var(--muted);">קרדיט 1 לפתיחת משחק מבוקש</p></div>
+                    <span style="font-weight:800; color:var(--accent);">₪5</span>
+                </div>
+                <div class="price-card featured">
+                    <div><strong style="color:var(--gold); font-size:14px;">💎 חבילת המאני-טיים</strong><p style="font-size:11px; color:var(--muted);">15 קרדיטים לשלבי ההכרעה</p></div>
+                    <span style="font-weight:800; color:var(--gold);">₪29</span>
+                </div>
+            </div>
+            <button class="btn-modal-primary" style="background:var(--gold);" onclick="alert('מערכת הסליקה תיפתח בקרוב!')">מעבר מאובטח לתשלום 💳</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="create-group-modal">
+        <div class="modal-card">
+            <div class="modal-header"><h3 style="font-weight:800; font-size:16px; color:var(--accent);">🛡️ הקמת קבוצה חדשה</h3><button class="btn-close-modal" onclick="closeModal('create-group-modal')">&times;</button></div>
+            <p style="font-size:12px; color:var(--muted);">הזן את שם קבוצת המונדיאל שלכם:</p>
+            <input type="text" class="app-custom-input" id="input-new-group-name" placeholder="למשל: הפרלמנט 🍻">
+            <button class="btn-modal-primary" onclick="submitNewGroupCreation()">צור קבוצה ברשת 🚀</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="success-alert-modal">
+        <div class="modal-card" style="text-align:center;">
+            <div style="font-size:40px; margin-bottom:10px;">🎯</div>
+            <h3 style="font-weight:800; font-size:16px; color:var(--accent);" id="success-modal-title">הפרופיל עודכן</h3>
+            <button class="btn-modal-primary" onclick="closeModal('success-alert-modal')">המשך</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="number-selector-modal"><div class="modal-card"><div class="modal-header"><h3 style="font-weight:800; font-size:16px; color:var(--accent);">בחר תוצאה</h3><button class="btn-close-modal" onclick="closeModal('number-selector-modal')">&times;</button></div><div class="selector-row"><button class="selector-num-btn" onclick="selectNumberValue(0)">0</button><button class="selector-num-btn" onclick="selectNumberValue(1)">1</button><button class="selector-num-btn" onclick="selectNumberValue(2)">2</button><button class="selector-num-btn" onclick="selectNumberValue(3)">3</button><button class="selector-num-btn" onclick="selectNumberValue(4)">4</button><button class="selector-num-btn" onclick="selectNumberValue(5)">5</button></div></div></div>
+    <div class="modal-overlay" id="team-selector-modal"><div class="modal-card"><div class="modal-header"><h3 style="font-weight:800; font-size:16px; color:var(--gold);">🏆 בחר נבחרת</h3><button class="btn-close-modal" onclick="closeModal('team-selector-modal')">&times;</button></div><div style="display:flex; flex-direction:column;" id="teams-list-injection-container"></div></div></div>
+    <div class="modal-overlay" id="scorer-selector-modal"><div class="modal-card"><div class="modal-header"><h3 style="font-weight:800; font-size:16px; color:var(--gold);">⚽ בחר מלך שערים</h3><button class="btn-close-modal" onclick="closeModal('scorer-selector-modal')">&times;</button></div><div style="display:flex; flex-direction:column;" id="scorers-list-injection-container"></div></div></div>
+
+    <div class="app-content">
+        
+        <div id="tab-home" class="tab-content active">
+            <div class="app-header">
+                <div class="hints-counter-badge">💎 <span id="hints-counter-val-home">2 קרדיטים</span></div>
+                <div class="header-buttons-group">
+                    <button class="btn-header-action" onclick="openModal('profile-settings-modal')">⚙️ הגדרות</button>
+                    <button class="btn-header-action" onclick="startOnboardingProcess()">❓ איך זה עובד</button>
+                    <button class="btn-header-action" onclick="openModal('rules-modal')">📜 חוקים</button>
+                </div>
+            </div>
+
+            <div class="user-stats-dashboard">
+                <div class="stat-item-box"><span>הניקוד שלי</span><strong id="dash-total-score-val">0 נק'</strong></div>
+                <div style="width:1px; height:35px; background:var(--border); margin:0 10px;"></div>
+                <div class="stat-item-box"><span>המיקום שלי</span><strong id="dash-my-rank-val">1</strong></div>
+            </div>
+
+            <div class="champions-selection">
+                <div class="champ-box-wrapper">
+                    <div class="champ-box" onclick="openTeamSelector()">
+                        <span>🏆 המנצחת שלי</span>
+                        <div class="champ-img-container" id="global-selected-team-flag">🌍</div>
+                        <div class="champ-name" id="global-selected-team-name">טרם נבחר</div>
+                    </div>
+                    <button class="btn-lock-prediction" style="padding:6px; font-size:10px; margin-top:4px;" onclick="saveGlobalPredictionLocal(event, 'team')">נעל הימור</button>
+                </div>
+                <div class="champ-box-wrapper">
+                    <div class="champ-box" onclick="openScorerSelector()">
+                        <span>⚽ מלך השערים</span>
+                        <div class="champ-img-container" id="global-selected-scorer-flag">🏃‍♂️</div>
+                        <div class="champ-name" id="global-selected-scorer-name">טרם נבחר</div>
+                    </div>
+                    <button class="btn-lock-prediction" style="padding:6px; font-size:10px; margin-top:4px;" onclick="saveGlobalPredictionLocal(event, 'scorer')">נעל הימור</button>
+                </div>
+            </div>
+
+            <div class="section-title" style="color:var(--accent); font-weight:800;">📅 משחקי מחזור היום:</div>
+            <div id="home-today-matches-container"></div>
+        </div>
+
+        <div id="tab-predictions" class="tab-content">
+            <div class="rounds-navigation">
+                <button class="round-nav-btn active" id="stage-btn-group" onclick="switchStageFilter('group')">שלב הבתים</button>
+                <button class="round-nav-btn" id="stage-btn-16" onclick="switchStageFilter('16')">שמינית גמר</button>
+                <button class="round-nav-btn" id="stage-btn-8" onclick="switchStageFilter('8')">רבע גמר</button>
+                <button class="round-nav-btn" id="stage-btn-4" onclick="switchStageFilter('4')">חצי גמר</button>
+                <button class="round-nav-btn" id="stage-btn-2" onclick="switchStageFilter('2')">הגמר הגדול</button>
+            </div>
+            <div class="section-title" id="predictions-stage-title">רשימת משחקי שלב הבתים:</div>
+            <div id="predictions-matches-list-container"></div>
+        </div>
+
+        <div id="tab-leaderboard" class="tab-content">
+            <div class="groups-management-card">
+                <h4 style="font-size: 14px; color:#FFF;">🛡️ מועדון הקבוצות שלי</h4>
+                <p style="font-size: 11px; color: var(--muted); margin-top: 2px;">צור קבוצה חדשה או הצטרף לקבוצה קיימת</p>
+                <button class="btn-create-group" onclick="openModal('create-group-modal')">➕ צור קבוצה חדשה ברגע</button>
+            </div>
+
+            <div id="my-multi-groups-list-container"></div>
+            <div class="section-title" id="leaderboard-title" style="margin-top:16px;">טבלת הדירוג החיה של הקבוצה שבחרת</div>
+            <div class="leaderboard-list" id="dynamic-leaderboard"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="nav-icon">🏠</span><span>מסך הבית</span></div>
+        <div class="nav-item" id="nav-predictions" onclick="switchTab('predictions')"><span class="nav-icon">📝</span><span>ניחושים</span></div>
+        <div class="nav-item" id="nav-leaderboard" onclick="switchTab('leaderboard')"><span class="nav-icon">🏆</span><span>קבוצות</span></div>
+    </div>
+</div>
+
+<script>
+    const RENDER_APP_URL = window.location.origin; 
+    const SUPABASE_URL = "https://bkudwbvudclnhlfxqdyi.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_COAkdRbcmMWrMk0x9eWyrg_nzYnGJz0";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let CURRENT_USER_ID = null;
+    let userVipMode = 'credits'; 
+    let userCreditsBalance = 2; 
+    let activeScoreBoxId = null;
+    let currentPredictionsStageFilter = 'group';
+    let myJoinedGroupsList = [];
+    let currentSelectedActiveGroupCode = null;
+    let currentFlowIntent = 'login'; 
+
+    const playersList = ["הארי קיין", "ויניסיוס ג'וניור", "כריסטיאנו רונאלדו", "לאמין ימאל", "ליונל מסי", "קיליאן אמבפה"].sort();
+    const teamsList = ["אנגליה", "ארגנטינה 🇦🇷", "ברזיל 🇧🇷", "גרמניה 🇩🇪", "הולנד 🇳🇱", "ספרד 🇪🇸", "צרפת 🇫🇷"].sort();
+
+    // 📅 כל משחקי שלב הבתים - מונדיאל 2026
+    const worldCupStage1Matches = [
+        { id: "m1", group: "בית א'", home: "מקסיקו", away: "דרום אפריקה", date: "11/06", time: "22:00", ai: "0-2 למקסיקו", basePopHome: 1.8, basePopAway: 0.6, basePct: 74 },
+        { id: "m2", group: "בית א'", home: "דרום קוריאה", away: "צ'כיה", date: "12/06", time: "05:00", ai: "1-1 תיקו", basePopHome: 1.2, basePopAway: 1.1, basePct: 52 },
+        { id: "m3", group: "בית ב'", home: "קנדה", away: "בוסניה", date: "12/06", time: "22:00", ai: "0-1 לקנדה", basePopHome: 1.5, basePopAway: 0.4, basePct: 61 },
+        { id: "m4", group: "בית ד'", home: "ארה\"ב", away: "פרגוואי", date: "13/06", time: "04:00", ai: "1-2 לארה\"ב", basePopHome: 2.0, basePopAway: 0.8, basePct: 68 },
+        { id: "m5", group: "בית ב'", home: "קטאר", away: "שוויץ", date: "13/06", time: "22:00", ai: "2-0 לשוויץ", basePopHome: 0.5, basePopAway: 2.4, basePct: 80 },
+        { id: "m6", group: "בית ג'", home: "ברזיל", away: "מרוקו", date: "14/06", time: "01:00", ai: "1-2 לברזיל", basePopHome: 2.5, basePopAway: 1.0, basePct: 85 },
+        { id: "m7", group: "בית ג'", home: "האיטי", away: "סקוטלנד", date: "14/06", time: "04:00", ai: "2-0 לסקוטלנד", basePopHome: 0.3, basePopAway: 1.9, basePct: 70 },
+        { id: "m8", group: "בית ד'", home: "אוסטרליה", away: "טורקיה", date: "14/06", time: "07:00", ai: "2-1 לטורקיה", basePopHome: 1.0, basePopAway: 1.4, basePct: 55 },
+        { id: "m9", group: "בית ה'", home: "גרמניה", away: "קוראסאו", date: "14/06", time: "20:00", ai: "0-4 לגרמניה", basePopHome: 3.5, basePopAway: 0.2, basePct: 92 },
+        { id: "m10", group: "בית ו'", home: "הולנד", away: "יפן", date: "14/06", time: "23:00", ai: "1-2 להולנד", basePopHome: 2.1, basePopAway: 1.1, basePct: 78 }
+    ];
+
+    let onboardingCurrentStep = 0;
+    const onboardingStepsData = [
+        { title: "הקבוצות של החבר'ה 🛡️", desc: "יוצרים קבוצה עם כל החברה, מעתיקים את הלינק ישירות לוואטסאפ ומקימים קבוצה מנצחת!", mockHtml: `<div style="text-align:right; width:100%;"><p style="font-weight:700; font-size:11px; color:var(--accent); margin-bottom:4px;">🍻 הפרלמנט של רון</p><div style="background:rgba(0,255,157,0.06); border:1px dashed var(--accent); padding:5px; border-radius:8px; font-size:9px; color:var(--accent); text-align:center; word-break:break-all;">https://chat.whatsapp.com/worldcup-invite</div></div>` },
+        { title: "שיטת הניקוד המדויקת ⚽", desc: "פגעת בתוצאה המדויקת של המשחק? בום! קיבלת 3 נקודות. פגעת רק בכיוון הנכון? קיבלת נקודה 1.", mockHtml: `<div style="text-align:center; width:100%;"><div style="font-size:22px; color:var(--accent); font-weight:900;">+3 נקודות! 🔥</div></div>` },
+        { title: "בוטים 🤖", desc: "לא נשארים לבד במערכה! לתוך הקבוצות שלכם הצטרפו הקוף והינשוף (בוט רנדמולי ובוט AI) שיאתגרו אתכם!", mockHtml: `<div style="display:flex; flex-direction:column; gap:4px; width:100%; font-size:11px;"><div style="display:flex; justify-content:space-between; background:#1F2C3F; padding:6px; border-radius:8px;"><span>🦉 בוט ינשוף</span><strong>0 נק'</strong></div><div style="display:flex; justify-content:space-between; background:#1F2C3F; padding:6px; border-radius:8px;"><span>🐒 בוט קוף</span><strong>0 נק'</strong></div></div>` },
+        { title: "מנוי VIP 👑", desc: "מאפשר לך לרכוש המלצות משחק בעזרת קרדיטים. המנוי חושף בפניך את ניתוח מודל הינשוף ואת חוכמת ההמונים — המציגה ממוצע תוצאות משוער משולב יחד עם התפלגות בחירת האחוזים של כלל משתמשי האפליקציה באמצעות מודל אגרגציה נפרד.", mockHtml: `<div style="background:rgba(255, 200, 55, 0.08); border:1px solid var(--gold); padding:8px; border-radius:10px; font-size:10px; text-align:right; width:100%; line-height:1.4;">🤖 המלצת הינשוף: 0-2 למקסיקו<br>📊 חוכמת ההמונים: משוער 1-2 (74% למקסיקו)</div>` }
+    ];
+
+    async function handleAuthActionFromApp(intent) {
+        currentFlowIntent = intent;
+        await loginWithGoogleFromApp();
+    }
+
+    async function loginWithGoogleFromApp() {
+        const cleanUrl = window.location.origin + window.location.pathname;
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google', options: { redirectTo: cleanUrl }
+        });
+        if (error) alert('ההתחברות נכשלה: ' + error.message);
+    }
+
+    async function checkUserSessionOnLoad() {
+        injectHomeTodayMatches();
+        injectPredictionsStageMatches();
+
+        // 🟢 מאזין חסין תקלות לטיפול ב-Redirect מגוגל בזמן אמת ללא השהיות
+        if (window.location.hash.includes('access_token=')) {
+            document.getElementById('app-login-screen-overlay').style.display = 'none';
+        }
+
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (session && session.user) {
+                CURRENT_USER_ID = session.user.id;
+                
+                try {
+                    const { data: profile, error } = await supabaseClient.from('profiles').select('*').eq('id', CURRENT_USER_ID).single();
+
+                    if (error || !profile) {
+                        userVipMode = 'credits'; userCreditsBalance = 2;
+                        await supabaseClient.from('profiles').upsert({
+                            id: CURRENT_USER_ID, username: session.user.user_metadata.full_name || 'שחקן אלמוני', nickname: '', user_mode: 'credits', credits_balance: 2
+                        });
+                        document.getElementById('app-login-screen-overlay').style.display = 'none';
+                        openModal('profile-settings-modal'); 
+                        startOnboardingProcess();
+                    } else {
+                        document.getElementById('app-login-screen-overlay').style.display = 'none';
+                        userVipMode = profile.user_mode || 'standard';
+                        userCreditsBalance = profile.credits_balance || 0;
+                        
+                        if(!profile.nickname || profile.nickname === "") {
+                            openModal('profile-settings-modal');
+                        } else {
+                            document.getElementById('input-user-nickname-field').value = profile.nickname;
+                        }
+                        
+                        if (profile.champion_team) document.getElementById('global-selected-team-name').innerText = profile.champion_team;
+                        if (profile.top_scorer) document.getElementById('global-selected-scorer-name').innerText = profile.top_scorer;
+                        document.getElementById('dash-total-score-val').innerText = `${profile.total_score || 0} נק'`;
+
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const inviteCode = urlParams.get('invite');
+                        if (inviteCode) joinGroupAutomatically(inviteCode);
+                    }
+
+                    updateVipBadgeUI();
+                    loadUnlockedVipHints();
+                    loadUserSavedPredictionsFromDatabase();
+                    loadAndRenderUserGroups();
+
+                } catch (err) {
+                    document.getElementById('app-login-screen-overlay').style.display = 'none';
+                }
+            } else {
+                document.getElementById('app-login-screen-overlay').style.display = 'flex';
+                document.getElementById('app-onboarding-overlay').style.display = 'none';
+            }
+        });
+    }
+
+    async function submitSaveUserNickname() {
+        const nameField = document.getElementById('input-user-nickname-field').value;
+        if(!nameField || nameField.trim() === "") return;
+        await supabaseClient.from('profiles').update({ nickname: nameField.trim(), username: nameField.trim() }).eq('id', CURRENT_USER_ID);
+        closeModal('profile-settings-modal');
+        showAppCustomAlert('הפרופיל עודכן', '');
+        loadAndRenderUserGroups();
+    }
+
+    async function loadAndRenderUserGroups() {
+        const listContainer = document.getElementById('my-multi-groups-list-container');
+        if(!listContainer) return; listContainer.innerHTML = '';
+
+        try {
+            const { data: memberships } = await supabaseClient.from('user_groups').select('group_code, is_main').eq('user_id', CURRENT_USER_ID);
+            myJoinedGroupsList = memberships || [];
+
+            if(myJoinedGroupsList.length === 0) {
+                listContainer.innerHTML = `<p style="text-align:center; font-size:12px; color:var(--muted); padding:10px;">צור את הקבוצה הראשונה שלך</p>`;
+                loadLeaderboardDynamically(null); return;
+            }
+
+            for (let member of myJoinedGroupsList) {
+                const { data: group } = await supabaseClient.from('groups').select('name').eq('code', member.group_code).single();
+                if(!group) continue;
+                
+                if(member.is_main && !currentSelectedActiveGroupCode) {
+                    currentSelectedActiveGroupCode = member.group_code;
+                }
+
+                const card = document.createElement('div');
+                card.className = `group-item-row-card ${member.group_code === currentSelectedActiveGroupCode ? 'active' : ''}`;
+                card.onclick = function() { selectActiveGroupView(member.group_code); };
+                card.innerHTML = `
+                    <div class="group-card-header">
+                        <strong style="color:#FFF; font-size:13px;">🛡️ ${group.name}</strong>
+                        ${member.is_main ? `<span class="main-group-tag">קבוצה ראשית</span>` : `<button class="btn-set-main-group" onclick="setMainGroupAction(event, '${member.group_code}')">🎯 קבע כראשית</button>`}
+                    </div>
+                    <div class="share-link-box" style="display:block; margin-top:8px;" onclick="copySpecificGroupLink(event, '${member.group_code}')">
+                        🔗 לחץ להעתקת לינק הזמנה לקבוצה זו!
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            }
+
+            if(!currentSelectedActiveGroupCode && myJoinedGroupsList.length > 0) {
+                currentSelectedActiveGroupCode = myJoinedGroupsList[0].group_code;
+            }
+
+            loadLeaderboardDynamically(currentSelectedActiveGroupCode);
+        } catch(e) {
+            listContainer.innerHTML = `<p style="text-align:center; font-size:12px; color:var(--muted); padding:10px;">צור את הקבוצה הראשונה שלך</p>`;
+        }
+    }
+
+    function selectActiveGroupView(code) {
+        currentSelectedActiveGroupCode = code;
+        loadAndRenderUserGroups();
+    }
+
+    async function setMainGroupAction(event, code) {
+        event.stopPropagation();
+        await supabaseClient.from('user_groups').update({ is_main: false }).eq('user_id', CURRENT_USER_ID);
+        await supabaseClient.from('user_groups').update({ is_main: true }).eq('user_id', CURRENT_USER_ID).eq('group_code', code);
+        currentSelectedActiveGroupCode = code;
+        loadAndRenderUserGroups();
+    }
+
+    async function submitNewGroupCreation() {
+        const groupNameInput = document.getElementById('input-new-group-name').value;
+        if (!groupNameInput || groupNameInput.trim() === "") return;
+
+        const generatedCode = 'grp-' + Math.random().toString(36).substring(2, 9);
+        const isFirst = myJoinedGroupsList.length === 0;
+        
+        myJoinedGroupsList.push({ group_code: generatedCode, is_main: isFirst });
+        currentSelectedActiveGroupCode = generatedCode;
+
+        await supabaseClient.from('groups').insert({ code: generatedCode, name: groupNameInput.trim() });
+        await supabaseClient.from('user_groups').insert({ user_id: CURRENT_USER_ID, group_code: generatedCode, is_main: isFirst });
+        
+        document.getElementById('input-new-group-name').value = '';
+        closeModal('create-group-modal');
+        showAppCustomAlert('🛡️ קבוצה נוצרה', '');
+        loadAndRenderUserGroups();
+    }
+
+    async function joinGroupAutomatically(inviteCode) {
+        await supabaseClient.from('user_groups').upsert({ user_id: CURRENT_USER_ID, group_code: inviteCode }, { onConflict: 'user_id,group_code' });
+        window.history.replaceState({}, document.title, window.location.pathname);
+        currentSelectedActiveGroupCode = inviteCode;
+        loadAndRenderUserGroups();
+    }
+
+    function copySpecificGroupLink(event, code) {
+        event.stopPropagation();
+        const fullInviteUrl = `${RENDER_APP_URL}?invite=${code}`;
+        navigator.clipboard.writeText(fullInviteUrl).then(() => { showAppCustomAlert('🔗 הקישור הועתק', ""); });
+    }
+
+    function injectHomeTodayMatches() {
+        const container = document.getElementById('home-today-matches-container');
+        if(!container) return; container.innerHTML = '';
+        const todayMatches = worldCupStage1Matches.filter(m => m.date === "11/06" || m.date === "12/06");
+
+        todayMatches.forEach((match) => {
+            const isUnlocked = unlockedMatchesList.includes(match.id);
+            const lockIcon = (userVipMode === 'full' || isUnlocked) ? '💡' : '🔒';
+
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `
+                <div class="match-meta">
+                    <span class="group-heading">${match.group}</span>
+                    <span class="match-time">${match.date} • ${match.time}</span>
+                    <button class="btn-vip-lock" id="home-lock-btn-${match.id}" onclick="handleVipClickLocal('home-hint-${match.id}')">${lockIcon}</button>
+                </div>
+                <div class="match-row">
+                    <div class="team-side"><span class="team-name">${match.home}</span></div>
+                    <div class="score-box" id="home-box-${match.id}-home" onclick="openNumberSelector('home-box-${match.id}-home')">-</div>
+                    <span>:</span>
+                    <div class="score-box" id="home-box-${match.id}-away" onclick="openNumberSelector('home-box-${match.id}-away')">-</div>
+                    <div class="team-side"><span class="team-name">${match.away}</span></div>
+                </div>
+                <button class="btn-lock-prediction" onclick="saveMatchPredictionToSupabaseFromScreen('${match.id}', 'home-box')">נעל הימור</button>
+                <div class="vip-unlocked-box" id="home-hint-${match.id}"></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function switchStageFilter(stage) {
+        currentPredictionsStageFilter = stage;
+        document.querySelectorAll('.round-nav-btn').forEach(b => b.classList.remove('active'));
+        if(stage === 'group') document.getElementById('stage-btn-group').classList.add('active');
+        if(stage === '16') document.getElementById('stage-btn-16').classList.add('active');
+        if(stage === '8') document.getElementById('stage-btn-8').classList.add('active');
+        if(stage === '4') document.getElementById('stage-btn-4').classList.add('active');
+        if(stage === '2') document.getElementById('stage-btn-2').classList.add('active');
+        injectPredictionsStageMatches();
+    }
+
+    function injectPredictionsStageMatches() {
+        const container = document.getElementById('predictions-matches-list-container');
+        const titleLabel = document.getElementById('predictions-stage-title');
+        if(!container) return; container.innerHTML = '';
+
+        if (currentPredictionsStageFilter !== 'group') {
+            titleLabel.innerText = "";
+            container.innerHTML = `<p style="text-align:center; font-size:12px; color:var(--muted); padding:40px;">המשחקים של שלב זה טרם נקבעו</p>`;
+            return;
+        }
+
+        titleLabel.innerText = "רשימת משחקי שלב הבתים:";
+        worldCupStage1Matches.forEach((match) => {
+            const isUnlocked = unlockedMatchesList.includes(match.id);
+            const lockIcon = (userVipMode === 'full' || isUnlocked) ? '💡' : '🔒';
+
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `
+                <div class="match-meta">
+                    <span class="group-heading">${match.group}</span>
+                    <span class="match-time">${match.date} • ${match.time}</span>
+                    <button class="btn-vip-lock" id="pred-lock-btn-${match.id}" onclick="handleVipClickLocal('pred-hint-${match.id}')">${lockIcon}</button>
+                </div>
+                <div class="match-row">
+                    <div class="team-side"><span class="team-name">${match.home}</span></div>
+                    <div class="score-box" id="pred-box-${match.id}-home" onclick="openNumberSelector('pred-box-${match.id}-home')">-</div>
+                    <span>:</span>
+                    <div class="score-box" id="pred-box-${match.id}-away" onclick="openNumberSelector('pred-box-${match.id}-away')">-</div>
+                    <div class="team-side"><span class="team-name">${match.away}</span></div>
+                </div>
+                <button class="btn-lock-prediction" onclick="saveMatchPredictionToSupabaseFromScreen('${match.id}', 'pred-box')">נעל הימור</button>
+                <div class="vip-unlocked-box" id="pred-hint-${match.id}"></div>
+            `;
+            container.appendChild(card);
+        });
+        loadUserSavedPredictionsFromDatabase();
+    }
+
+    async function saveMatchPredictionToSupabaseFromScreen(matchId, prefix) {
+        const homeScoreText = document.getElementById(`${prefix}-${matchId}-home`).innerText;
+        const awayScoreText = document.getElementById(`${prefix}-${matchId}-away`).innerText;
+        if (homeScoreText === '-' || awayScoreText === '-') { alert('אנא בחר תוצאה תחילה!'); return; }
+
+        await supabaseClient.from('predictions').upsert({
+            user_id: CURRENT_USER_ID, match_id: matchId, home_score: parseInt(homeScoreText), away_score: parseInt(awayScoreText)
+        }, { onConflict: 'user_id,match_id' });
+
+        showAppCustomAlert('🎯 הימור ננעל', '');
+        const otherPrefix = prefix === 'home-box' ? 'pred-box' : 'home-box';
+        const h = document.getElementById(`${otherPrefix}-${matchId}-home`);
+        const a = document.getElementById(`${otherPrefix}-${matchId}-away`);
+        if(h) h.innerText = homeScoreText; if(a) a.innerText = awayScoreText;
+    }
+
+    async function loadLeaderboardDynamically(activeCode) {
+        const container = document.getElementById('dynamic-leaderboard');
+        if (!activeCode) {
+            container.innerHTML = `<p style="text-align:center; font-size:12px; color:var(--muted); padding:20px;">צור קבוצה חדשה או הצטרף לקבוצה קיימת</p>`;
+            document.getElementById('dash-my-rank-val').innerText = '-'; return;
+        }
+
+        try {
+            const { data: profile } = await supabaseClient.from('profiles').select('nickname, total_score').eq('id', CURRENT_USER_ID).single();
+            const myName = profile && profile.nickname !== "" ? profile.nickname : "אתה";
+            const myScore = profile ? profile.total_score || 0 : 0;
+
+            let ranking = [
+                { name: `${myName} ⭐`, score: myScore, isMe: true },
+                { name: "🦉 בוט ינשוף", score: 0, isMe: false },
+                { name: "🐒 בוט קוף", score: 0, isMe: false }
+            ].sort((a,b) => b.score - a.score);
+
+            container.innerHTML = '';
+            ranking.forEach((player, index) => {
+                if(player.isMe) document.getElementById('dash-my-rank-val').innerText = index + 1;
+                const row = document.createElement('div');
+                row.className = `player-row ${player.isMe ? 'me' : ''}`;
+                row.innerHTML = `
+                    <div class="player-info">
+                        <span class="rank-num">${index + 1}</span>
+                        <span class="player-name">${player.name}</span>
+                    </div>
+                    <span class="player-score">${player.score} נק'</span>
+                `;
+                container.appendChild(row);
+            });
+        } catch(e) {
+            container.innerHTML = '';
+        }
+    }
+
+    function updateVipBadgeUI() { document.getElementById('hints-counter-val-home').innerText = `${userCreditsBalance} קרדיטים`; }
+    async function loadUnlockedVipHints() { try { const { data: hints } = await supabaseClient.from('predictions').select('match_id').eq('user_id', CURRENT_USER_ID).eq('vip_unlocked', true); if (hints) { hints.forEach(h => unlockedMatchesList.push(h.match_id)); } } catch(e){} }
+
+    async function loadUserSavedPredictionsFromDatabase() {
+        try {
+            const { data: dbPredictions } = await supabaseClient.from('predictions').select('*').eq('user_id', CURRENT_USER_ID);
+            if (dbPredictions) {
+                dbPredictions.forEach(pred => {
+                    ["home-box", "pred-box"].forEach(prefix => {
+                        const h = document.getElementById(`${prefix}-${pred.match_id}-home`);
+                        const a = document.getElementById(`${prefix}-${pred.match_id}-away`);
+                        if(h && pred.home_score !== null) h.innerText = pred.home_score;
+                        if(a && pred.away_score !== null) a.innerText = pred.away_score;
+                    });
+                });
+            }
+        } catch(e){}
+    }
+
+    async function handleVipClickLocal(boxId) {
+        const box = document.getElementById(boxId);
+        if (!box || !CURRENT_USER_ID) return;
+        const matchId = boxId.replace('home-hint-', '').replace('pred-hint-', '');
+        const match = worldCupStage1Matches.find(m => m.id === matchId);
+        const isAlreadyUnlocked = unlockedMatchesList.includes(matchId);
+        if (box.style.display === 'block') { box.style.display = 'none'; return; }
+
+        if (userVipMode === 'full' || isAlreadyUnlocked) { renderVipHintContent(box, matchId, match); } 
+        else if (userVipMode === 'credits') {
+            if (userCreditsBalance > 0) {
+                if (confirm(`לפתוח המלצה בעלות קרדיט 1? (יתרתך: ${userCreditsBalance})`)) {
+                    userCreditsBalance--; unlockedMatchesList.push(matchId); updateVipBadgeUI();
+                    await supabaseClient.from('profiles').update({ credits_balance: userCreditsBalance }).eq('id', CURRENT_USER_ID);
+                    await supabaseClient.from('predictions').upsert({ user_id: CURRENT_USER_ID, match_id: matchId, vip_unlocked: true }, { onConflict: 'user_id,match_id' });
+                    ["home-lock-btn-", "pred-lock-btn-"].forEach(p => { const b = document.getElementById(p + matchId); if(b) b.innerText = '💡'; });
+                    renderVipHintContent(box, matchId, match);
+                }
+            } else { openModal('premium-shop-modal'); }
+        }
+    }
+
+    function renderVipHintContent(box, matchId, match) {
+        box.style.display = 'block';
+        let userHomeInput = document.getElementById(`pred-box-${matchId}-home`) ? document.getElementById(`pred-box-${matchId}-home`).innerText : '-';
+        let userAwayInput = document.getElementById(`pred-box-${matchId}-away`) ? document.getElementById(`pred-box-${matchId}-away`).innerText : '-';
+        let finalPopHome = match.basePopHome; let finalPopAway = match.basePopAway; let finalPct = match.basePct;
+        if (userHomeInput !== '-' && userAwayInput !== '-') {
+            finalPopHome = ((match.basePopHome * 20) + parseInt(userHomeInput)) / 21; finalPopAway = ((match.basePopAway * 20) + parseInt(userAwayInput)) / 21;
+            if (parseInt(userHomeInput) > parseInt(userAwayInput)) finalPct = Math.min(95, match.basePct + 2);
+        }
+        box.innerHTML = `🤖 <strong>המלצת הינשוף (AI):</strong> ${match.ai} <br> 📊 <strong>חוכמת ההמונים:</strong> תוצאה משוערת ${finalPopHome.toFixed(1)}-${finalPopAway.toFixed(1)} (${finalPct}% למארחת)`;
+    }
+
+    function startOnboardingProcess() { document.getElementById('app-onboarding-overlay').style.display = 'flex'; onboardingCurrentStep = 0; renderOnboardingStep(); }
+    function renderOnboardingStep() { const step = onboardingStepsData[onboardingCurrentStep]; document.getElementById('onboarding-content-area').innerHTML = `<h3>${step.title}</h3><p>${step.desc}</p><div class="onboarding-mock-image">${step.mockHtml}</div>`; const dotsArea = document.getElementById('onboarding-dots-area'); dotsArea.innerHTML = ''; onboardingStepsData.forEach((_, idx) => { const dot = document.createElement('div'); dot.className = `dot ${idx === onboardingCurrentStep ? 'active' : ''}`; dotsArea.appendChild(dot); }); document.getElementById('btn-next-onboard-action').innerText = onboardingCurrentStep === onboardingStepsData.length - 1 ? "בוא נתחיל! ⚽" : "הבא ➡️"; }
+    function nextOnboardingStep() { if (onboardingCurrentStep < onboardingStepsData.length - 1) { onboardingCurrentStep++; renderOnboardingStep(); } else { finishOnboarding(); } }
+    function finishOnboarding() { localStorage.setItem('onboarding_done', 'true'); document.getElementById('app-onboarding-overlay').style.display = 'none'; }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active'); document.getElementById('nav-' + tabName).classList.add('active');
+        if(tabName === 'home') injectHomeTodayMatches(); if(tabName === 'predictions') injectPredictionsStageMatches(); if(tabName === 'leaderboard') loadAndRenderUserGroups();
+    }
+
+    function openNumberSelector(boxId) { activeScoreBoxId = boxId; openModal('number-selector-modal'); }
+    function selectNumberValue(val) { if(activeScoreBoxId) document.getElementById(activeScoreBoxId).innerText = val; closeModal('number-selector-modal'); }
+
+    function openTeamSelector() {
+        const container = document.getElementById('teams-list-injection-container'); container.innerHTML = '';
+        teamsList.forEach(t => { const item = document.createElement('div'); item.className = 'selection-list-item'; item.innerText = t; item.onclick = function() { document.getElementById('global-selected-team-name').innerText = t; closeModal('team-selector-modal'); }; container.appendChild(item); });
+        openModal('team-selector-modal');
+    }
+
+    function openScorerSelector() {
+        const container = document.getElementById('scorers-list-injection-container'); container.innerHTML = '';
+        playersList.forEach(p => { const item = document.createElement('div'); item.className = 'selection-list-item'; item.innerText = p; item.onclick = function() { document.getElementById('global-selected-scorer-name').innerText = p; closeModal('scorer-selector-modal'); }; container.appendChild(item); });
+        openModal('scorer-selector-modal');
+    }
+
+    async function saveGlobalPredictionLocal(event, type) { if (!CURRENT_USER_ID) return; event.stopPropagation(); let updateData = {}; if (type === 'team') { updateData = { champion_team: document.getElementById('global-selected-team-name').innerText }; } else { updateData = { top_scorer: document.getElementById('global-selected-scorer-name').innerText }; } await supabaseClient.from('profiles').update(updateData).eq('id', CURRENT_USER_ID); showAppCustomAlert('🎯 הימור ננעל', ''); }
+    function showAppCustomAlert(title, desc) { document.getElementById('success-modal-title').innerText = title; openModal('success-alert-modal'); }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    window.onload = function() {
+        checkUserSessionOnLoad();
+    };
+</script>
+</body>
+</html>
