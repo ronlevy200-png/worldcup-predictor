@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Panel - World Cup 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rubik', sans-serif; }
+        body { background: #0A0E14; color: #FFF; min-height: 100vh; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #1F2C3F; }
+        h1 { font-size: 20px; font-weight: 800; color: #FFC837; }
+        .section { background: #111823; border: 1px solid #1F2C3F; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .section h2 { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: #00FF9D; }
+        .match-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1F2C3F; gap: 12px; }
+        .match-row:last-child { border-bottom: none; }
+        .match-info { font-size: 13px; color: #FFF; flex: 1; }
+        .match-date { font-size: 11px; color: #8F9CAE; margin-top: 2px; }
+        .score-inputs { display: flex; align-items: center; gap: 8px; }
+        .score-input { width: 50px; padding: 8px; background: #0D1420; border: 1px solid #1F2C3F; border-radius: 8px; color: #FFF; font-size: 16px; font-weight: 700; text-align: center; }
+        .btn { padding: 8px 14px; border-radius: 10px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; }
+        .btn-gold { background: rgba(255,200,55,0.15); border: 1px solid rgba(255,200,55,0.4); color: #FFC837; }
+        .btn-green { background: rgba(0,255,157,0.1); border: 1px solid rgba(0,255,157,0.3); color: #00FF9D; }
+        .btn-red { background: rgba(255,50,50,0.1); border: 1px solid rgba(255,50,50,0.3); color: #ff6b6b; }
+        .btn-full { width: 100%; padding: 12px; margin-top: 12px; font-size: 14px; }
+        input[type=number] { -moz-appearance: textfield; }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .status { font-size: 12px; color: #8F9CAE; margin-top: 8px; text-align: center; }
+        .status.ok { color: #00FF9D; }
+        .status.err { color: #ff6b6b; }
+        .login-box { max-width: 400px; margin: 100px auto; text-align: center; }
+        .owl-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .owl-select { flex: 1; background: #0D1420; border: 1px solid #1F2C3F; padding: 10px; border-radius: 10px; color: #FFF; font-size: 13px; }
+        .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 6px; }
+        .tag-done { background: rgba(0,255,157,0.15); color: #00FF9D; }
+        .tag-pending { background: rgba(255,200,55,0.15); color: #FFC837; }
+        .tag-locked { background: rgba(255,255,255,0.08); color: #8F9CAE; }
+    </style>
+</head>
+<body>
+
+<div id="login-box" class="login-box">
+    <h1 style="margin-bottom:8px;">🏆 Admin Panel</h1>
+    <p style="color:#8F9CAE;margin-bottom:20px;font-size:13px;">כניסה לאדמין בלבד</p>
+    <button onclick="adminLogin()" style="width:100%;padding:14px;background:#FFF;color:#111;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="18"> התחברות
+    </button>
+    <p id="login-err" style="color:#ff6b6b;font-size:12px;margin-top:10px;"></p>
+</div>
+
+<div id="admin-panel" style="display:none; max-width:700px; margin:0 auto;">
+    <div class="header">
+        <h1>🏆 World Cup Admin</h1>
+        <button class="btn btn-red" onclick="adminLogout()">יציאה</button>
+    </div>
+
+    <!-- סטטוס -->
+    <div class="section">
+        <h2>📊 סטטוס מערכת</h2>
+        <div id="stats-area" style="font-size:13px;color:#8F9CAE;">טוען...</div>
+    </div>
+
+    <!-- הזנת תוצאות -->
+    <div class="section">
+        <h2>⚽ הזנת תוצאות משחקים</h2>
+        <div id="matches-admin"></div>
+    </div>
+
+    <!-- רשימת כל הניחושים -->
+    <div class="section">
+        <h2>📋 כל ניחושי הינשוף</h2>
+        <div id="owl-predictions-list"></div>
+    </div>
+
+    <div class="section">
+        <h2>📋 כל ניחושי הקוף</h2>
+        <div id="monkey-predictions-list"></div>
+    </div>
+
+    <!-- ניחושי ינשוף - ממשק כמו תוצאות -->
+    <div class="section">
+        <h2>🦉 ניחושי ינשוף</h2>
+        <p style="font-size:12px;color:#8F9CAE;margin-bottom:14px;">הזן ניחוש לכל משחק שלב הבתים</p>
+        <div id="owl-input-list"></div>
+        <p id="owl-status" class="status"></p>
+    </div>
+
+    <!-- ניחושי קוף -->
+    <div class="section">
+        <h2>🐒 ניחושי קוף</h2>
+        <p style="font-size:12px;color:#8F9CAE;margin-bottom:12px;">הגרלה רנדומלית 0-5 לכל המשחקים</p>
+        <button class="btn btn-gold btn-full" onclick="generateMonkey()">🎲 הגרל ניחושי קוף לכל המשחקים</button>
+        <p id="monkey-status" class="status"></p>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://bkudwbvudclnhlfxqdyi.supabase.co";
+const SUPABASE_KEY = "sb_publishable_COAkdRbcmMWrMk0x9eWyrg_nzYnGJz0";
+const ADMIN_UID = 'dd1d25e8-5c15-4665-86b2-2f54c4828738'; // ← תחליף עם ה-UID שלך
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+});
+
+let matches = [];
+const HE_NAMES_ADMIN = {
+    'Mexico': 'מקסיקו', 'South Africa': 'דרום אפריקה', 'Korea Republic': 'דרום קוריאה',
+    'Czechia': "צ'כיה", 'Canada': 'קנדה', 'Bosnia and Herzegovina': 'בוסניה',
+    'USA': 'ארה"ב', 'United States': 'ארה"ב', 'Paraguay': 'פרגוואי',
+    'Qatar': 'קטאר', 'Switzerland': 'שוויץ', 'Brazil': 'ברזיל', 'Morocco': 'מרוקו',
+    'Haiti': 'האיטי', 'Scotland': 'סקוטלנד', 'Australia': 'אוסטרליה', 'Turkey': 'טורקיה',
+    'Germany': 'גרמניה', 'Netherlands': 'הולנד', 'Japan': 'יפן',
+    "Côte d'Ivoire": 'חוף השנהב', 'Ivory Coast': 'חוף השנהב',
+    'Ecuador': 'אקוודור', 'Sweden': 'שבדיה', 'Tunisia': 'תוניסיה',
+    'Spain': 'ספרד', 'Cabo Verde': 'כף ורדה', 'Cape Verde': 'כף ורדה',
+    'Belgium': 'בלגיה', 'Egypt': 'מצרים', 'Saudi Arabia': 'ערב הסעודית',
+    'Uruguay': 'אורוגוואי', 'Iran': 'איראן', 'New Zealand': 'ניו זילנד',
+    'France': 'צרפת', 'Senegal': 'סנגל', 'Iraq': 'עיראק',
+    'Norway': 'נורווגיה', 'Argentina': 'ארגנטינה', 'Algeria': "אלג'יריה",
+    'Austria': 'אוסטריה', 'Jordan': 'ירדן', 'England': 'אנגליה',
+    'Portugal': 'פורטוגל', 'Croatia': 'קרואטיה', 'Colombia': 'קולומביה',
+    'Ghana': 'גאנה', 'Cameroon': 'קמרון', 'Panama': 'פנמה',
+    'Curaçao': 'קוראסאו', 'South Korea': 'דרום קוריאה',
+    'Serbia': 'סרביה', 'Denmark': 'דנמרק', 'Poland': 'פולין',
+    'Ukraine': 'אוקראינה', 'Honduras': 'הונדורס', 'Costa Rica': 'קוסטה ריקה',
+    'El Salvador': 'אל סלבדור', 'Nigeria': 'ניגריה', 'Indonesia': 'אינדונזיה',
+    'China PR': 'סין', 'Uzbekistan': 'אוזבקיסטן',
+};
+
+const fixNameAdmin = (name) => {
+    if (!name || name === 'null') return null;
+    return HE_NAMES_ADMIN[name] || name;
+};
+
+async function loadMatchesAdmin() {
+    const { data } = await sb.from('matches').select('*').order('date').order('time');
+    if (data && data.length > 0) {
+        matches = data.map(m => ({ 
+            ...m,
+            home: fixNameAdmin(m.home),
+            away: fixNameAdmin(m.away)
+        })).filter(m => m.home && m.away);
+        renderMatchesAdmin();
+        renderOwlInputList();
+        loadBotPredictions();
+    }
+}
+
+async function adminLogin() {
+    const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: 'https://worldcup-predictor-t021.onrender.com/admin.html', queryParams: { prompt: 'select_account' } }
+    });
+    if (error) document.getElementById('login-err').innerText = error.message;
+}
+
+async function adminLogout() {
+    await sb.auth.signOut();
+    location.reload();
+}
+
+async function checkAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    if (session.user.id !== ADMIN_UID) {
+        document.getElementById('login-err').innerText = 'אין הרשאות אדמין';
+        await sb.auth.signOut();
+        return;
+    }
+    document.getElementById('login-box').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadStats();
+    loadMatchesAdmin();
+}
+
+async function loadStats() {
+    const { count: usersCount } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+    const { count: predsCount } = await sb.from('predictions').select('*', { count: 'exact', head: true });
+    const { data: results } = await sb.from('match_results').select('match_id');
+    document.getElementById('stats-area').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+            <div style="background:#0D1420;border-radius:10px;padding:12px;"><div style="font-size:22px;font-weight:800;color:#00FF9D">${usersCount || 0}</div><div>משתמשים</div></div>
+            <div style="background:#0D1420;border-radius:10px;padding:12px;"><div style="font-size:22px;font-weight:800;color:#FFC837">${predsCount || 0}</div><div>ניחושים</div></div>
+            <div style="background:#0D1420;border-radius:10px;padding:12px;"><div style="font-size:22px;font-weight:800;color:#FFF">${results?.length || 0}/${matches.length}</div><div>תוצאות</div></div>
+        </div>
+    `;
+}
+
+async function loadBotPredictions() {
+    // ניחושי ינשוף
+    const { data: owlPreds } = await sb.from('bot_predictions')
+        .select('match_id, home_score, away_score')
+        .eq('bot_id', 'bot-owl')
+        .order('match_id');
+    
+    const owlContainer = document.getElementById('owl-predictions-list');
+    if (owlPreds && owlPreds.length > 0) {
+        owlContainer.innerHTML = owlPreds.map(p => {
+            const match = matches.find(m => m.id === p.match_id);
+            if (!match || !match.home || match.home === 'null') return '';
+            return `<div class="match-row" style="padding:6px 0;">
+                <div class="match-info">${match.home} נגד ${match.away} <span style="color:#8F9CAE;font-size:11px;">(${match.date})</span></div>
+                <div style="font-size:14px;font-weight:700;color:#00FF9D">${p.home_score}-${p.away_score}</div>
+            </div>`;
+        }).filter(Boolean).join('') || '<p style="color:#8F9CAE;font-size:12px;text-align:center;padding:10px;">אין ניחושים עדיין</p>';
+    } else {
+        owlContainer.innerHTML = '<p style="color:#8F9CAE;font-size:12px;text-align:center;padding:10px;">אין ניחושים עדיין</p>';
+    }
+
+    // ניחושי קוף
+    const { data: monkeyPreds } = await sb.from('bot_predictions')
+        .select('match_id, home_score, away_score')
+        .eq('bot_id', 'bot-monkey')
+        .order('match_id');
+    
+    const monkeyContainer = document.getElementById('monkey-predictions-list');
+    if (monkeyPreds && monkeyPreds.length > 0) {
+        monkeyContainer.innerHTML = monkeyPreds.map(p => {
+            const match = matches.find(m => m.id === p.match_id);
+            if (!match || !match.home || match.home === 'null') return '';
+            return `<div class="match-row" style="padding:6px 0;">
+                <div class="match-info">${match.home} נגד ${match.away} <span style="color:#8F9CAE;font-size:11px;">(${match.date})</span></div>
+                <div style="font-size:14px;font-weight:700;color:#FFC837">${p.home_score}-${p.away_score}</div>
+            </div>`;
+        }).filter(Boolean).join('') || '<p style="color:#8F9CAE;font-size:12px;text-align:center;padding:10px;">אין ניחושים עדיין</p>';
+    } else {
+        monkeyContainer.innerHTML = '<p style="color:#8F9CAE;font-size:12px;text-align:center;padding:10px;">אין ניחושים עדיין</p>';
+    }
+}
+
+async function renderMatchesAdmin() {
+    const container = document.getElementById('matches-admin');
+    const { data: results } = await sb.from('match_results').select('*');
+    const resultsMap = {};
+    results?.forEach(r => resultsMap[r.match_id] = r);
+
+    container.innerHTML = '';
+    matches.filter(m => m.home && m.home !== 'null' && m.away && m.away !== 'null').forEach(m => {
+        const res = resultsMap[m.id];
+        const isDone = !!res;
+        const now = new Date();
+        const [day, month] = (m.date || '01/06').split('/').map(Number);
+        const [hour, min] = (m.time || '00:00').split(':').map(Number);
+        const matchTime = new Date(2026, month-1, day, hour, min);
+        const isLocked = now >= matchTime;
+
+        const row = document.createElement('div');
+        row.className = 'match-row';
+        row.innerHTML = `
+            <div class="match-info">
+                <span class="tag ${isDone ? 'tag-done' : isLocked ? 'tag-locked' : 'tag-pending'}">${isDone ? '✓ נגמר' : isLocked ? '🔒 נעול' : '⏳ פתוח'}</span>
+                ${m.home} נגד ${m.away}
+                <div class="match-date">${m.date} • ${m.time} • ${m.group}</div>
+                ${isDone ? `<div style="font-size:12px;color:#00FF9D;margin-top:2px;">תוצאה: ${res.home_score}-${res.away_score}</div>` : ''}
+            </div>
+            <div class="score-inputs">
+                <input type="number" id="h-${m.id}" class="score-input" min="0" max="20" placeholder="${res ? res.home_score : '-'}" value="${res ? res.home_score : ''}">
+                <span style="color:#8F9CAE">:</span>
+                <input type="number" id="a-${m.id}" class="score-input" min="0" max="20" placeholder="${res ? res.away_score : '-'}" value="${res ? res.away_score : ''}">
+                <button class="btn ${isDone ? 'btn-green' : 'btn-gold'}" onclick="submitResult('${m.id}','${m.home}','${m.away}')">${isDone ? 'עדכן' : 'שמור'}</button>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+async function submitResult(matchId, homeName, awayName) {
+    const h = parseInt(document.getElementById('h-'+matchId).value);
+    const a = parseInt(document.getElementById('a-'+matchId).value);
+    if (isNaN(h) || isNaN(a)) { alert('הזן תוצאה תקינה'); return; }
+
+    const match = matches.find(m => m.id === matchId);
+    const actualDir = h > a ? 'home' : h < a ? 'away' : 'draw';
+    const stage = match.stage || 'group';
+    const exactPts = { group:3, '16':4, '8':5, '4':8, final:10 }[stage] || 3;
+    const dirPts = { group:1, '16':2, '8':3, '4':4, final:5 }[stage] || 1;
+
+    // שמור תוצאה
+    await sb.from('match_results').upsert(
+        { match_id: matchId, home_score: h, away_score: a, updated_at: new Date().toISOString() },
+        { onConflict: 'match_id' }
+    );
+
+    // חשב ניקוד למשתמשים
+    const { data: preds } = await sb.from('predictions')
+        .select('user_id, home_score, away_score')
+        .eq('match_id', matchId)
+        .not('home_score', 'is', null);
+
+    let updated = 0;
+    for (const pred of preds || []) {
+        const predDir = pred.home_score > pred.away_score ? 'home' : pred.home_score < pred.away_score ? 'away' : 'draw';
+        let pts = 0;
+        if (pred.home_score === h && pred.away_score === a) pts = exactPts;
+        else if (predDir === actualDir) pts = dirPts;
+        if (pts > 0) {
+            await sb.from('predictions').update({ points_earned: pts }).eq('user_id', pred.user_id).eq('match_id', matchId);
+            const { data: profile } = await sb.from('profiles').select('total_score').eq('id', pred.user_id).single();
+            await sb.from('profiles').update({ total_score: (profile?.total_score || 0) + pts }).eq('id', pred.user_id);
+            updated++;
+        }
+    }
+
+    // חשב ניקוד לבוטים
+    const { data: botPreds } = await sb.from('bot_predictions').select('bot_id, home_score, away_score').eq('match_id', matchId);
+    for (const bp of botPreds || []) {
+        const predDir = bp.home_score > bp.away_score ? 'home' : bp.home_score < bp.away_score ? 'away' : 'draw';
+        let pts = 0;
+        if (bp.home_score === h && bp.away_score === a) pts = exactPts;
+        else if (predDir === actualDir) pts = dirPts;
+        if (pts > 0) {
+            const { data: bs } = await sb.from('bot_scores').select('total_score').eq('bot_id', bp.bot_id).single();
+            await sb.from('bot_scores').update({ total_score: (bs?.total_score || 0) + pts }).eq('bot_id', bp.bot_id);
+        }
+    }
+
+    alert(`✅ תוצאה נשמרה! ${updated} משתמשים קיבלו נקודות`);
+    renderMatchesAdmin();
+    loadStats();
+}
+
+function renderOwlSelect() {
+    // לא בשימוש - renderOwlInputList מחליף
+}
+
+async function renderOwlInputList() {
+    const container = document.getElementById('owl-input-list');
+    if (!container) return;
+    
+    // שלוף ניחושים קיימים
+    const { data: existingPreds } = await sb.from('bot_predictions')
+        .select('match_id, home_score, away_score')
+        .eq('bot_id', 'bot-owl');
+    const existingMap = {};
+    (existingPreds || []).forEach(p => existingMap[p.match_id] = p);
+    
+    // הצג רק משחקי שלב הבתים
+    const groupMatches = matches.filter(m => m.stage === 'group' && m.home && m.home !== 'null' && m.away && m.away !== 'null');
+    
+    container.innerHTML = '';
+    groupMatches.forEach(m => {
+        const ex = existingMap[m.id];
+        const row = document.createElement('div');
+        row.className = 'match-row';
+        row.innerHTML = `
+            <div class="match-info">
+                ${ex ? `<span class="tag tag-done">✓ נשמר: ${ex.home_score}-${ex.away_score}</span>` : `<span class="tag tag-pending">⏳ טרם הוזן</span>`}
+                ${m.home} נגד ${m.away}
+                <div class="match-date">${m.date} • ${m.time} • ${m.group_name || ''}</div>
+            </div>
+            <div class="score-inputs">
+                <input type="number" id="owl-h-${m.id}" class="score-input" min="0" max="20" placeholder="${ex ? ex.home_score : '-'}" value="${ex ? ex.home_score : ''}">
+                <span style="color:#8F9CAE">:</span>
+                <input type="number" id="owl-a-${m.id}" class="score-input" min="0" max="20" placeholder="${ex ? ex.away_score : '-'}" value="${ex ? ex.away_score : ''}">
+                <button class="btn btn-green" onclick="saveOwlForMatch('${m.id}','${m.home}','${m.away}')">שמור</button>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+async function saveOwlForMatch(matchId, homeName, awayName) {
+    const h = parseInt(document.getElementById('owl-h-' + matchId).value);
+    const a = parseInt(document.getElementById('owl-a-' + matchId).value);
+    if (isNaN(h) || isNaN(a)) { alert('הזן תוצאה תקינה'); return; }
+    
+    await sb.from('bot_predictions').upsert(
+        { bot_id: 'bot-owl', match_id: matchId, home_score: h, away_score: a },
+        { onConflict: 'bot_id,match_id' }
+    );
+    
+    // עדכן owl_prediction בטבלת matches
+    const owlText = `${h}-${a} ל${h > a ? homeName : a > h ? awayName : 'תיקו'}`;
+    await sb.from('matches').update({ owl_prediction: owlText }).eq('id', matchId);
+    
+    document.getElementById('owl-status').className = 'status ok';
+    document.getElementById('owl-status').innerText = `✅ ניחוש ינשוף נשמר: ${homeName} ${h}-${a} ${awayName}`;
+    renderOwlInputList();
+    loadBotPredictions();
+}
+
+async function saveOwl() {
+    const matchId = document.getElementById('owl-match').value;
+    const h = parseInt(document.getElementById('owl-h').value);
+    const a = parseInt(document.getElementById('owl-a').value);
+    if (isNaN(h) || isNaN(a)) { document.getElementById('owl-status').innerText = 'הזן תוצאה תקינה'; return; }
+    await sb.from('bot_predictions').upsert(
+        { bot_id: 'bot-owl', match_id: matchId, home_score: h, away_score: a },
+        { onConflict: 'bot_id,match_id' }
+    );
+    // עדכן גם את שדה owl_prediction בטבלת matches
+    const match = matches.find(m => m.id === matchId);
+    const owlText = match ? `${h}-${a} ל${h > a ? match.home : a > h ? match.away : 'תיקו'}` : `${h}-${a}`;
+    await sb.from('matches').update({ owl_prediction: owlText }).eq('id', matchId);
+    document.getElementById('owl-status').className = 'status ok';
+    document.getElementById('owl-status').innerText = '✅ ניחוש ינשוף נשמר';
+    loadBotPredictions();
+}
+
+async function generateMonkey() {
+    document.getElementById('monkey-status').innerText = 'מגריל...';
+    const groupMatches = matches.filter(m => m.stage === 'group' && m.home && m.home !== 'null' && m.away && m.away !== 'null');
+    for (const match of groupMatches) {
+        await sb.from('bot_predictions').upsert(
+            { bot_id: 'bot-monkey', match_id: match.id, home_score: Math.floor(Math.random()*6), away_score: Math.floor(Math.random()*6) },
+            { onConflict: 'bot_id,match_id' }
+        );
+    }
+    document.getElementById('monkey-status').className = 'status ok';
+    document.getElementById('monkey-status').innerText = `✅ הקוף ניחש ל-${groupMatches.length} משחקי שלב הבתים!`;
+    loadBotPredictions();
+}
+
+sb.auth.onAuthStateChange((event, session) => {
+    if (session) checkAuth();
+});
+
+window.onload = async () => {
+    // האזן לשינויי auth (כולל חזרה מגוגל)
+    sb.auth.onAuthStateChange(async (event, session) => {
+        if (session) checkAuth();
+    });
+    
+    // בדוק סשן קיים
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) checkAuth();
+};
+</script>
+</body>
+</html>
