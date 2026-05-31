@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>WORLD CUP 2026 - Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0A0E14; --card: #111823; --accent: #00FF9D;
+            --gold: #FFC837; --text: #FFFFFF; --muted: #8F9CAE; --border: #1F2C3F;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rubik', sans-serif; }
+        body { background: #030609; color: var(--text); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; -webkit-tap-highlight-color: transparent; }
+
+        /* LOGIN */
+        .login-screen { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#0A0E14; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; text-align:center; }
+        .login-logo { font-size:48px; margin-bottom:10px; }
+        .login-title { font-size:24px; font-weight:900; color:#FFF; margin-bottom:8px; }
+        .login-subtitle { font-size:14px; color:var(--muted); margin-bottom:35px; line-height:1.5; max-width:280px; }
+        .login-actions-box { width:100%; max-width:280px; display:flex; flex-direction:column; gap:12px; }
+        .btn-google-login { width:100%; border:none; padding:14px 20px; border-radius:14px; font-size:14px; font-weight:700; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:12px; background:#FFF; color:#111823; box-shadow:0 4px 20px rgba(0,0,0,0.4); transition:transform 0.2s; }
+        .btn-google-login:active { transform:scale(0.98); }
+        .btn-google-login img { width:18px; height:18px; }
+
+        /* ONBOARDING */
+        .onboarding-screen { position:absolute; top:0; left:0; right:0; bottom:0; background:#0A0E14; z-index:1500; display:none; flex-direction:column; padding:24px; text-align:center; }
+        .onboarding-header { display:flex; justify-content:flex-end; width:100%; }
+        .btn-skip-ob { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; }
+        .ob-body { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; }
+        .ob-mock { width:280px; height:130px; background:#111823; border:2px solid var(--border); border-radius:20px; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:12px; overflow:hidden; }
+        .ob-dots { display:flex; gap:8px; justify-content:center; margin-bottom:10px; }
+        .dot { width:8px; height:8px; background:#1F2C3F; border-radius:50%; transition:.3s; }
+        .dot.active { width:24px; background:var(--accent); border-radius:4px; }
+        .btn-ob-next { width:100%; background:var(--accent); color:#000; border:none; padding:14px; border-radius:14px; font-size:14px; font-weight:800; cursor:pointer; }
+
+        /* PHONE */
+        .phone-container { width:100%; max-width:412px; height:892px; background:var(--bg); border-radius:40px; box-shadow:0 20px 50px rgba(0,0,0,0.8); border:8px solid #1F2530; overflow:hidden; display:flex; flex-direction:column; position:relative; }
+        .dynamic-island { width:110px; height:30px; background:#000; border-radius:20px; position:absolute; left:50%; transform:translateX(-50%); top:10px; z-index:10; }
+        .app-content { flex:1; overflow-y:auto; padding:50px 16px 90px 16px; }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+
+        /* HEADER */
+        .app-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+        .header-btns { display:flex; gap:4px; align-items:center; }
+        .credits-badge { background:rgba(255,200,55,0.15); border:1px solid var(--gold); color:var(--gold); padding:4px 8px; border-radius:12px; font-size:11px; font-weight:700; display:flex; align-items:center; gap:4px; height:26px; white-space:nowrap; }
+        .btn-hdr { background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#FFF; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:600; cursor:pointer; height:26px; display:flex; align-items:center; white-space:nowrap; }
+
+        /* DASHBOARD */
+        .stats-row { background:#111823; border:1px solid var(--border); border-radius:18px; padding:12px; display:flex; justify-content:center; align-items:center; gap:40px; margin-bottom:14px; text-align:center; }
+        .stat-box span { display:block; font-size:11px; color:var(--muted); font-weight:600; margin-bottom:2px; }
+        .stat-box strong { font-size:18px; color:var(--accent); font-weight:800; }
+
+        /* CHAMPIONS */
+        .champs-row { background:#111823; border:1px solid var(--border); border-radius:20px; padding:12px; margin-bottom:16px; display:flex; gap:12px; }
+        .champ-col { flex:1; display:flex; flex-direction:column; gap:6px; }
+        .champ-box { border-radius:14px; padding:8px; text-align:center; cursor:pointer; display:flex; flex-direction:column; align-items:center; }
+        .champ-box > span { font-size:10px; color:var(--gold); font-weight:700; margin-bottom:2px; }
+        .champ-img { width:40px; height:40px; border-radius:50%; border:2px solid var(--border); background:#0D1420; display:flex; justify-content:center; align-items:center; font-size:20px; margin-bottom:4px; overflow:hidden; }
+        .champ-img img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .champ-name { font-size:11px; font-weight:700; color:#FFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; }
+        .btn-lock { width:100%; background:rgba(0,255,157,0.08); border:1px solid rgba(0,255,157,0.3); color:var(--accent); padding:6px; border-radius:12px; font-size:10px; font-weight:700; cursor:pointer; }
+
+        /* MATCHES */
+        .section-title { font-size:14px; color:#FFF; margin:12px 0 8px; font-weight:700; }
+        .group-tag { font-size:10px; color:var(--accent); background:rgba(0,255,157,0.05); padding:2px 6px; border-radius:4px; font-weight:700; }
+        .match-card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:14px; margin-bottom:10px; }
+        .match-meta { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--muted); margin-bottom:10px; }
+        .match-time-badge { color:#E2E8F0; background:rgba(255,255,255,0.03); padding:2px 6px; border-radius:6px; font-size:10px; }
+        .match-row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+        .team-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+        .team-name { font-size:13px; font-weight:600; text-align:center; }
+        .score-box { width:42px; height:42px; background:#0D1420; border:1px solid var(--border); border-radius:12px; color:#FFF; font-size:16px; font-weight:700; display:flex; justify-content:center; align-items:center; cursor:pointer; }
+        .btn-vip { background:none; border:1px solid rgba(255,200,55,0.4); color:var(--gold); width:34px; height:34px; border-radius:10px; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:16px; }
+        .vip-box { display:none; background:rgba(0,255,157,0.05); border:1px solid rgba(0,255,157,0.2); padding:10px; border-radius:12px; margin-top:10px; font-size:12px; line-height:1.6; color:#E2E8F0; }
+        .btn-lock-pred { width:100%; background:rgba(0,255,157,0.08); border:1px solid rgba(0,255,157,0.3); color:var(--accent); padding:8px; border-radius:12px; font-size:11px; font-weight:700; margin-top:12px; cursor:pointer; }
+
+        /* ROUNDS NAV */
+        .rounds-nav { display:flex; background:#0D1420; padding:4px; border-radius:14px; margin-bottom:14px; border:1px solid var(--border); overflow-x:auto; gap:4px; }
+        .rounds-nav::-webkit-scrollbar { display:none; }
+        .round-btn { flex:1; min-width:78px; background:none; border:none; color:var(--muted); padding:8px 4px; font-size:11px; font-weight:700; border-radius:10px; cursor:pointer; white-space:nowrap; }
+        .round-btn.active { background:var(--card); color:var(--accent); box-shadow:0 4px 10px rgba(0,0,0,0.3); }
+
+        /* GROUPS TAB */
+        .groups-mgmt-card { background:#111823; border:1px solid var(--border); border-radius:20px; padding:14px; margin-bottom:14px; text-align:center; }
+        .btn-create-group { background:var(--accent); color:#000; border:none; padding:10px 16px; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; margin-top:8px; width:100%; }
+
+        /* GROUP CARD */
+        .group-card { background:linear-gradient(135deg,#16222F,#0D1420); border:1px solid var(--border); border-radius:16px; padding:12px 14px; margin-bottom:8px; cursor:pointer; transition:.15s; }
+        .group-card.active { border-color:var(--accent); }
+        .group-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+        .group-card-name { font-size:13px; font-weight:700; color:#FFF; }
+        .main-tag { background:var(--accent); color:#000; font-size:9px; font-weight:800; padding:2px 6px; border-radius:4px; }
+        .btn-set-main { background:rgba(255,255,255,0.03); border:1px solid var(--border); color:var(--gold); font-size:9px; padding:2px 6px; border-radius:5px; cursor:pointer; font-weight:700; }
+        .btn-delete-group { background:#c0392b; border:none; color:#FFF; font-size:10px; font-weight:800; padding:3px 10px; border-radius:5px; cursor:pointer; white-space:nowrap; }
+        .invite-row { display:flex; align-items:center; gap:6px; background:rgba(0,255,157,0.04); border:1px solid rgba(0,255,157,0.15); border-radius:8px; padding:6px 10px; cursor:pointer; margin-top:4px; }
+        .invite-row span { font-size:10px; color:var(--muted); flex:1; }
+        .invite-copy-btn { background:rgba(0,255,157,0.1); border:none; color:var(--accent); font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; cursor:pointer; white-space:nowrap; }
+
+        /* LEADERBOARD */
+        .leaderboard-section { margin-top:12px; }
+        .leaderboard-title { font-size:12px; color:var(--accent); font-weight:700; margin-bottom:8px; }
+        .player-row { display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--border); padding:10px 14px; border-radius:14px; margin-bottom:6px; }
+        .player-row.me { border-color:var(--accent); background:linear-gradient(90deg,rgba(0,255,157,0.04),transparent); }
+        .player-info { display:flex; align-items:center; gap:10px; }
+        .rank-num { width:22px; height:22px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:11px; font-weight:700; background:#1F2C3F; color:#FFF; }
+        .rank-num.gold { background:var(--gold); color:#000; }
+        .rank-num.silver { background:#C0C0C0; color:#000; }
+        .rank-num.bronze { background:#CD7F32; color:#FFF; }
+        .player-name { font-size:13px; font-weight:600; color:#FFF; }
+        .player-score { font-size:14px; font-weight:800; color:var(--accent); }
+
+        /* SELECTOR */
+        .selection-item { background:#0D1420; border:1px solid var(--border); padding:10px 12px; margin-bottom:6px; border-radius:10px; color:#FFF; font-size:13px; font-weight:600; text-align:right; cursor:pointer; display:flex; align-items:center; gap:10px; transition:.15s; }
+        .selection-item:active { border-color:var(--accent); }
+        .player-thumb { width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
+        .player-thumb-placeholder { width:36px; height:36px; border-radius:50%; background:#1F2C3F; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+
+        /* MODALS */
+        .modal-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:1000; display:none; justify-content:center; align-items:center; padding:20px; }
+        .modal-card { background:#111823; border:1px solid var(--border); border-radius:28px; width:100%; max-height:85%; display:flex; flex-direction:column; overflow:hidden; }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; padding:18px 22px 12px; border-bottom:1px solid rgba(255,255,255,0.05); flex-shrink:0; }
+        .modal-body { padding:16px 22px 22px; overflow-y:auto; }
+        .modal-title { font-weight:800; font-size:16px; }
+        .btn-close { background:none; border:none; color:var(--muted); font-size:24px; cursor:pointer; }
+        .app-input { width:100%; background:#0D1420; border:1px solid var(--border); padding:14px; border-radius:14px; color:#FFF; font-size:14px; margin-top:10px; outline:none; text-align:center; }
+        .btn-primary { width:100%; background:var(--accent); color:#000; font-weight:700; padding:14px; border-radius:14px; border:none; cursor:pointer; margin-top:12px; font-size:14px; }
+
+        /* NUMBER SELECTOR */
+        .num-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+        .num-btn { width:45px; height:45px; background:#0D1420; border:1px solid var(--border); border-radius:10px; color:#FFF; font-weight:700; font-size:15px; cursor:pointer; }
+        .num-btn:active { background:var(--accent); color:#000; }
+
+        /* SHOP */
+        .shop-grid { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+        .shop-item { background:#0D1420; border:1px solid var(--border); border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:.15s; }
+        .shop-item:active { border-color:var(--accent); }
+        .shop-item.featured { border-color:var(--gold); background:rgba(255,200,55,0.03); }
+        .shop-item-label { font-size:13px; font-weight:700; color:#FFF; }
+        .shop-item-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+        .shop-item-price { font-size:16px; font-weight:800; color:var(--accent); white-space:nowrap; }
+        .shop-item.featured .shop-item-price { color:var(--gold); }
+
+        /* RULES */
+        .rules-body { font-size:13px; line-height:1.7; color:#E2E8F0; margin-top:10px; text-align:right; }
+        .rules-body p { margin-bottom:8px; }
+        .rules-body hr { border:none; border-top:1px solid var(--border); margin:12px 0; }
+        .rules-stage { background:rgba(255,200,55,0.05); border:1px solid rgba(255,200,55,0.15); border-radius:10px; padding:8px 12px; margin-bottom:6px; }
+        .rules-stage-name { font-size:11px; color:var(--gold); font-weight:700; margin-bottom:4px; }
+
+        /* NOTIFICATIONS TOGGLE */
+        .notif-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); }
+        .notif-row:last-child { border-bottom:none; }
+        .notif-label { font-size:13px; color:#FFF; font-weight:600; }
+        .notif-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+        .toggle { width:44px; height:24px; background:#1F2C3F; border-radius:12px; position:relative; cursor:pointer; transition:.3s; flex-shrink:0; border:none; }
+        .toggle.on { background:var(--accent); }
+        .toggle::after { content:''; position:absolute; width:18px; height:18px; background:#FFF; border-radius:50%; top:3px; left:3px; transition:.3s; }
+        .toggle.on::after { left:23px; }
+
+        /* NAV */
+        .bottom-nav { position:absolute; bottom:0; left:0; right:0; height:75px; background:#0D1420; border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; padding-bottom:10px; z-index:100; }
+        .nav-item { display:flex; flex-direction:column; align-items:center; color:var(--muted); font-size:10px; font-weight:700; cursor:pointer; gap:4px; transition:.15s; }
+        .nav-item.active { color:var(--accent); }
+        .nav-icon { font-size:20px; }
+
+        /* SUCCESS */
+        .success-body { text-align:center; }
+        .success-emoji { font-size:40px; margin-bottom:10px; }
+    </style>
+</head>
+<body>
+<div class="phone-container">
+    <div class="dynamic-island"></div>
+
+    <!-- LOGIN -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-logo">🏆</div>
+        <h2 class="login-title">WORLD CUP 2026</h2>
+        <p class="login-subtitle">הפרלמנט של החבר'ה עובר לזמן אמת. כנס וקח את ההובלה!</p>
+        <div class="login-actions-box">
+            <button class="btn-google-login" id="btn-google" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="G">
+                התחברות באמצעות Google
+            </button>
+        </div>
+    </div>
+
+    <!-- ONBOARDING -->
+    <div class="onboarding-screen" id="onboarding-screen">
+        <div class="onboarding-header"><button class="btn-skip-ob" onclick="finishOnboarding()">סגור ✖️</button></div>
+        <div class="ob-body" id="ob-content"></div>
+        <div><div class="ob-dots" id="ob-dots"></div><button class="btn-ob-next" id="btn-ob-next" onclick="nextObStep()">הבא ➡️</button></div>
+    </div>
+
+    <!-- MODAL: שם משתמש חדש -->
+    <div class="modal-overlay" id="modal-new-nickname">
+        <div class="modal-card">
+            <div class="modal-header"><h3 class="modal-title" style="color:var(--accent);">👋 ברוך הבא!</h3></div>
+            <div class="modal-body">
+                <p style="font-size:12px;color:var(--muted);">בחר שם שיופיע בטבלת הדירוג</p>
+                <input type="text" class="app-input" id="input-new-nickname" placeholder="שם משתמש...">
+                <button class="btn-primary" onclick="saveNewNickname()">שמור והמשך 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: הגדרות -->
+    <div class="modal-overlay" id="modal-settings">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--text);">⚙️ הגדרות</h3>
+                <button class="btn-close" onclick="closeModal('modal-settings')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:12px;color:var(--muted);margin-bottom:4px;">שם משתמש</p>
+                <input type="text" class="app-input" id="input-edit-nickname" placeholder="שם חדש...">
+                <button class="btn-primary" onclick="saveEditNickname()">עדכן שם</button>
+                <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+                <button onclick="logoutUser()" style="width:100%;background:rgba(255,50,50,0.08);border:1px solid rgba(255,50,50,0.25);color:#ff6b6b;padding:12px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">🚪 התנתק</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: חוקים -->
+    <div class="modal-overlay" id="modal-rules">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--accent);">📜 חוקי הטורניר</h3>
+                <button class="btn-close" onclick="closeModal('modal-rules')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="rules-body">
+                    <p>🎯 <strong>תוצאה מדויקת:</strong> הנקודות המלאות לפי שלב</p>
+                    <p>⚽ <strong>כיוון נכון:</strong> חצי מהנקודות</p>
+                    <p>❌ <strong>טעות מלאה:</strong> 0 נקודות</p>
+                    <hr>
+                    <div class="rules-stage"><div class="rules-stage-name">שלב הבתים</div><p style="margin:0">תוצאה מדויקת: <strong>3 נק'</strong> | כיוון נכון: <strong>1 נק'</strong></p></div>
+                    <div class="rules-stage"><div class="rules-stage-name">שמינית גמר</div><p style="margin:0">תוצאה מדויקת: <strong>4 נק'</strong> | כיוון נכון: <strong>2 נק'</strong></p></div>
+                    <div class="rules-stage"><div class="rules-stage-name">רבע גמר</div><p style="margin:0">תוצאה מדויקת: <strong>5 נק'</strong> | כיוון נכון: <strong>3 נק'</strong></p></div>
+                    <div class="rules-stage"><div class="rules-stage-name">חצי גמר</div><p style="margin:0">תוצאה מדויקת: <strong>8 נק'</strong> | כיוון נכון: <strong>4 נק'</strong></p></div>
+                    <div class="rules-stage"><div class="rules-stage-name">גמר 🏆</div><p style="margin:0">תוצאה מדויקת: <strong>10 נק'</strong> | כיוון נכון: <strong>5 נק'</strong></p></div>
+                    <hr>
+                    <p style="font-weight:700;color:var(--gold);">🏆 בונוסים:</p>
+                    <p>• נבחרת מנצחת נכונה: <strong>10 נק'</strong></p>
+                    <p>• מלך שערים נכון: <strong>10 נק'</strong></p>
+                    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+                    <p style="font-weight:700;color:var(--accent);margin-bottom:8px;">📋 תנאי שימוש</p>
+                    <p style="margin-bottom:6px;">1. האפליקציה מיועדת לבידור בלבד.</p>
+                    <p style="margin-bottom:6px;">2. המשתמש חייב להיות מעל גיל 18.</p>
+                    <p style="margin-bottom:6px;">3. קרדיטים שנרכשו אינם ניתנים להחזר לאחר שימוש.</p>
+                    <p style="margin-bottom:6px;">4. אנו שומרים מייל ושם משתמש לצורך הפעלת השירות בלבד.</p>
+                    <p style="margin-bottom:6px;">5. אנו שומרים לעצמנו את הזכות לשנות את התנאים בכל עת.</p>
+                    <p>6. יצירת קשר: <a href="mailto:ronlevy200@gmail.com" style="color:var(--accent);">ronlevy200@gmail.com</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AbahceklvygZ1eZxJueCDo1IYfMsQGGaty_ml0RnWePB7Q1ObAvn8WCrFcwQpzkDe6NDcEihiyhz0MAY&currency=ILS&locale=he_IL" defer></script>
+
+    <!-- MODAL: חנות -->
+    <div class="modal-overlay" id="modal-shop">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--gold);">🛒 רכישת קרדיטים</h3>
+                <button class="btn-close" onclick="closeModal('modal-shop')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px;">כל קרדיט מאפשר פתיחת המלצת AI + חוכמת ההמונים למשחק אחד</p>
+                <div class="shop-grid">
+                    <div class="shop-item" onclick="startStripeCheckout(5,1)"><div><div class="shop-item-label">1 קרדיט</div><div class="shop-item-sub">הימור בודד</div></div><div class="shop-item-price">₪5</div></div>
+                    <div class="shop-item" onclick="startStripeCheckout(10,3)"><div><div class="shop-item-label">3 קרדיטים</div><div class="shop-item-sub">חיסכון של ₪5</div></div><div class="shop-item-price">₪10</div></div>
+                    <div class="shop-item" onclick="startStripeCheckout(15,5)"><div><div class="shop-item-label">5 קרדיטים</div><div class="shop-item-sub">חיסכון של ₪10</div></div><div class="shop-item-price">₪15</div></div>
+                    <div class="shop-item featured" onclick="startStripeCheckout(30,10)"><div><div class="shop-item-label">10 קרדיטים</div><div class="shop-item-sub">חיסכון של ₪20</div></div><div class="shop-item-price">₪30</div></div>
+                    <div class="shop-item" style="border-color:var(--accent);background:rgba(0,255,157,0.03);" onclick="startStripeCheckout(60,999)"><div><div class="shop-item-label" style="color:var(--accent);">∞ כל המונדיאל</div><div class="shop-item-sub">קרדיטים בלתי מוגבלים</div></div><div class="shop-item-price" style="color:var(--accent);">₪60</div></div>
+                </div>
+                <p id="paypal-status" style="font-size:11px;color:var(--accent);text-align:center;margin-top:10px;display:none;font-weight:600;"></p>
+                <div id="paypal-button-container" style="margin-top:8px;display:none;"></div>
+                <button id="paypal-cancel-btn" onclick="resetPayPalUI()" style="display:none;width:100%;margin-top:6px;padding:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;cursor:pointer;">ביטול</button>
+                <p style="font-size:10px;color:var(--muted);text-align:center;margin-top:10px;">🔒 תשלום מאובטח | PayPal · כרטיס אשראי</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: יצירת קבוצה -->
+    <div class="modal-overlay" id="modal-create-group">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--accent);">🛡️ קבוצה חדשה</h3>
+                <button class="btn-close" onclick="closeModal('modal-create-group')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="app-input" id="input-group-name" placeholder="שם הקבוצה...">
+                <button class="btn-primary" onclick="createGroup()">צור קבוצה 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: הזנת תוצאה סופית (אדמין) -->
+    <div class="modal-overlay" id="modal-result">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--gold);">⚽ הזן תוצאה סופית</h3>
+                <button class="btn-close" onclick="closeModal('modal-result')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:12px;color:var(--muted);margin-bottom:4px;" id="result-match-label"></p>
+                <div style="display:flex;gap:12px;align-items:center;justify-content:center;margin:16px 0;">
+                    <div>
+                        <p style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:4px;" id="result-home-label">בית</p>
+                        <input type="number" id="result-home-score" min="0" max="20" style="width:60px;padding:10px;background:#0D1420;border:1px solid var(--border);border-radius:10px;color:#FFF;font-size:20px;font-weight:700;text-align:center;">
+                    </div>
+                    <span style="font-size:24px;color:var(--muted);">:</span>
+                    <div>
+                        <p style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:4px;" id="result-away-label">חוץ</p>
+                        <input type="number" id="result-away-score" min="0" max="20" style="width:60px;padding:10px;background:#0D1420;border:1px solid var(--border);border-radius:10px;color:#FFF;font-size:20px;font-weight:700;text-align:center;">
+                    </div>
+                </div>
+                <button class="btn-primary" style="background:var(--gold);color:#000;" onclick="submitFinalResult()">עדכן תוצאה וחשב נקודות 🏆</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: success -->
+    <div class="modal-overlay" id="modal-success">
+        <div class="modal-card success-body">
+            <div class="success-emoji" id="success-emoji">🎯</div>
+            <h3 style="font-weight:800;font-size:16px;color:var(--accent);" id="success-title">נשמר!</h3>
+            <button class="btn-primary" onclick="closeModal('modal-success')">המשך</button>
+        </div>
+    </div>
+
+    <!-- MODAL: VIP המלצה -->
+    <div class="modal-overlay" id="modal-vip">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color:var(--gold);">💡 המלצת ינשוף</h3>
+                <button class="btn-close" onclick="closeModal('modal-vip')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="vip-modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: number selector -->
+    <div class="modal-overlay" id="modal-num">
+        <div class="modal-card">
+            <div class="modal-header"><h3 class="modal-title" style="color:var(--accent);">בחר תוצאה</h3><button class="btn-close" onclick="closeModal('modal-num')">&times;</button></div>
+            <div class="modal-body">
+                <div class="num-row">
+                    <button class="num-btn" onclick="pickNum(0)">0</button><button class="num-btn" onclick="pickNum(1)">1</button><button class="num-btn" onclick="pickNum(2)">2</button><button class="num-btn" onclick="pickNum(3)">3</button><button class="num-btn" onclick="pickNum(4)">4</button><button class="num-btn" onclick="pickNum(5)">5</button><button class="num-btn" onclick="pickNum(6)">6</button><button class="num-btn" onclick="pickNum(7)">7</button><button class="num-btn" onclick="pickNum(8)">8</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: team selector -->
+    <div class="modal-overlay" id="modal-teams">
+        <div class="modal-card">
+            <div class="modal-header"><h3 class="modal-title" style="color:var(--gold);">🏆 בחר נבחרת</h3><button class="btn-close" onclick="closeModal('modal-teams')">&times;</button></div>
+            <div class="modal-body"><div id="teams-list"></div></div>
+        </div>
+    </div>
+
+    <!-- MODAL: scorer selector -->
+    <div class="modal-overlay" id="modal-scorers">
+        <div class="modal-card">
+            <div class="modal-header"><h3 class="modal-title" style="color:var(--gold);">⚽ בחר מלך שערים</h3><button class="btn-close" onclick="closeModal('modal-scorers')">&times;</button></div>
+            <div class="modal-body"><div id="scorers-list"></div></div>
+        </div>
+    </div>
+
+    <!-- APP CONTENT -->
+    <div class="app-content">
+
+        <!-- TAB: HOME -->
+        <div id="tab-home" class="tab-content active">
+            <div class="app-header">
+                <div class="credits-badge">💎 <span id="credits-badge-val">2 קרדיטים</span></div>
+                <div class="header-btns">
+                    <button class="btn-hdr" onclick="openSettings()">⚙️ הגדרות</button>
+                    <button class="btn-hdr" onclick="startOnboarding()">❓ מדריך</button>
+                    <button class="btn-hdr" onclick="openModal('modal-rules')">📜 חוקים</button>
+                </div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-box"><span>הניקוד שלי</span><strong id="my-score-val">0 נק'</strong></div>
+                <div style="width:1px;height:35px;background:var(--border);margin:0 10px;"></div>
+                <div class="stat-box"><span>המיקום שלי</span><strong id="my-rank-val">-</strong></div>
+            </div>
+            <div class="champs-row">
+                <div class="champ-col">
+                    <div class="champ-box" onclick="openTeams()">
+                        <span>🏆 המנצחת שלי</span>
+                        <div class="champ-img" id="champ-team-flag"><span style="font-size:20px;">🌍</span></div>
+                        <div class="champ-name" id="champ-team-name">טרם נבחר</div>
+                    </div>
+                    <button class="btn-lock" onclick="saveChampion(event,'team')">שמור</button>
+                </div>
+                <div class="champ-col">
+                    <div class="champ-box" onclick="openScorers()">
+                        <span>⚽ מלך השערים</span>
+                        <div class="champ-img" id="champ-scorer-img"><span style="font-size:20px;">🏃</span></div>
+                        <div class="champ-name" id="champ-scorer-name">טרם נבחר</div>
+                    </div>
+                    <button class="btn-lock" onclick="saveChampion(event,'scorer')">שמור</button>
+                </div>
+            </div>
+            <div class="section-title" style="color:var(--accent);">📅 המשחקים הבאים:</div>
+            <div id="home-matches"></div>
+        </div>
+
+        <!-- TAB: PREDICTIONS -->
+        <div id="tab-predictions" class="tab-content">
+            <div class="rounds-nav">
+                <button class="round-btn active" id="rbtn-group" onclick="switchStage('group')">שלב הבתים</button>
+                <button class="round-btn" id="rbtn-16" onclick="switchStage('16')">שמינית גמר</button>
+                <button class="round-btn" id="rbtn-8" onclick="switchStage('8')">רבע גמר</button>
+                <button class="round-btn" id="rbtn-4" onclick="switchStage('4')">חצי גמר</button>
+                <button class="round-btn" id="rbtn-2" onclick="switchStage('2')">הגמר</button>
+            </div>
+            <div class="section-title" id="pred-stage-title">משחקי שלב הבתים:</div>
+            <div id="pred-matches"></div>
+        </div>
+
+        <!-- TAB: GROUPS -->
+        <div id="tab-groups" class="tab-content">
+            <div class="groups-mgmt-card">
+                <h4 style="font-size:14px;color:#FFF;">🛡️ הקבוצות שלי</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">צור קבוצה או הצטרף דרך לינק</p>
+                <button class="btn-create-group" onclick="openModal('modal-create-group')">➕ צור קבוצה חדשה</button>
+            </div>
+            <div id="groups-list"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="nav-icon">🏠</span><span>בית</span></div>
+        <div class="nav-item" id="nav-predictions" onclick="switchTab('predictions')"><span class="nav-icon">📝</span><span>ניחושים</span></div>
+        <div class="nav-item" id="nav-groups" onclick="switchTab('groups')"><span class="nav-icon">🏆</span><span>קבוצות</span></div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://bkudwbvudclnhlfxqdyi.supabase.co";
+const SUPABASE_KEY = "sb_publishable_COAkdRbcmMWrMk0x9eWyrg_nzYnGJz0";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const APP_URL = window.location.origin;
+
+let UID = null, userCredits = 2, activeScoreBox = null, currentStage = 'group';
+const ADMIN_UID = 'dd1d25e8-5c15-4665-86b2-2f54c4828738'; // ← תחליף עם ה-UID שלך מ-Supabase
+let myGroups = [], activeGroupCode = null, unlockedMatches = [];
+let notifSettings = { reminder: false, ranking: false };
+
+// ===== TEAMS - כל 48 נבחרות המונדיאל 2026 =====
+const FLAG_CODES = {
+    'ארה"ב':'us', 'מקסיקו':'mx', 'קנדה':'ca',
+    'דרום אפריקה':'za', 'מרוקו':'ma', 'סנגל':'sn',
+    'מצרים':'eg', 'גאנה':'gh', 'חוף השנהב':'ci',
+    'תוניסיה':'tn', 'אלג\u05d9ריה':'dz', 'קמרון':'cm',
+    'כף ורדה':'cv', 'ניגריה':'ng', 'מאלי':'ml',
+    'קונגו':'cd', 'זמביה':'zm', 'טנזניה':'tz',
+    'דרום קוריאה':'kr', 'יפן':'jp', 'אוסטרליה':'au',
+    'איראן':'ir', 'ערב הסעודית':'sa', 'קטאר':'qa',
+    'ירדן':'jo', 'עיראק':'iq', 'אוזבקיסטן':'uz',
+    'סין':'cn', 'אינדונזיה':'id', 'עומאן':'om', 'בחריין':'bh',
+    'גרמניה':'de', 'ספרד':'es', 'צרפת':'fr',
+    'אנגליה':'gb-eng', 'פורטוגל':'pt', 'הולנד':'nl',
+    'בלגיה':'be', 'קרואטיה':'hr', 'אוסטריה':'at',
+    'שוויץ':'ch', 'סקוטלנד':'gb-sct', 'שבדיה':'se',
+    'דנמרק':'dk', 'נורווגיה':'no', 'פולין':'pl',
+    'אוקראינה':'ua', 'סרביה':'rs', 'טורקיה':'tr',
+    'צ\u05db\u05d9ה':'cz', 'בוסניה והרצגובינה':'ba', 'סלובקיה':'sk',
+    'הונגריה':'hu', 'רומניה':'ro', 'סלובניה':'si',
+    'אלבניה':'al', 'יוון':'gr', 'פינלנד':'fi',
+    'איסלנד':'is', 'ויילס':'gb-wls', 'קוסובו':'xk',
+    'ברזיל':'br', 'ארגנטינה':'ar', 'אורוגוואי':'uy',
+    'קולומביה':'co', 'אקוודור':'ec', 'פרגוואי':'py',
+    'צ\u05d9לה':'cl', 'פרו':'pe', 'ונצואלה':'ve', 'בוליביה':'bo',
+    'האיטי':'ht', 'פנמה':'pa', 'קוראסאו':'cw',
+    'הונדורס':'hn', 'קוסטה ריקה':'cr', 'אל סלבדור':'sv',
+    'ג\u05de\u05d9\u05d9\u05e7\u05d4':'jm', 'גואטמלה':'gt',
+    'ניו זילנד':'nz', 'קוריאה הצפונית':'kp',
+};
+function getFlagUrl(name) {
+    const code = FLAG_CODES[name];
+    if (!code) return null;
+    return `https://flagcdn.com/w40/${code}.png`;
+}
+const teamsList = [
+    // מארחות
+    { name: "ארה\"ב", flag: "🇺🇸" }, { name: "מקסיקו", flag: "🇲🇽" }, { name: "קנדה", flag: "🇨🇦" },
+    // אירופה
+    { name: "אנגליה", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" }, { name: "צרפת", flag: "🇫🇷" }, { name: "גרמניה", flag: "🇩🇪" },
+    { name: "ספרד", flag: "🇪🇸" }, { name: "פורטוגל", flag: "🇵🇹" }, { name: "הולנד", flag: "🇳🇱" },
+    { name: "בלגיה", flag: "🇧🇪" }, { name: "נורווגיה", flag: "🇳🇴" }, { name: "קרואטיה", flag: "🇭🇷" },
+    { name: "שוויץ", flag: "🇨🇭" }, { name: "אוסטריה", flag: "🇦🇹" }, { name: "סקוטלנד", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+    { name: "שבדיה", flag: "🇸🇪" }, { name: "טורקיה", flag: "🇹🇷" }, { name: "צ'כיה", flag: "🇨🇿" },
+    { name: "בוסניה", flag: "🇧🇦" },
+    // דרום אמריקה
+    { name: "ארגנטינה", flag: "🇦🇷" }, { name: "ברזיל", flag: "🇧🇷" }, { name: "אורוגוואי", flag: "🇺🇾" },
+    { name: "קולומביה", flag: "🇨🇴" }, { name: "אקוודור", flag: "🇪🇨" }, { name: "פרגוואי", flag: "🇵🇾" },
+    // אפריקה
+    { name: "מרוקו", flag: "🇲🇦" }, { name: "סנגל", flag: "🇸🇳" }, { name: "מצרים", flag: "🇪🇬" },
+    { name: "גאנה", flag: "🇬🇭" }, { name: "חוף השנהב", flag: "🇨🇮" }, { name: "תוניסיה", flag: "🇹🇳" }, { name: "דרום אפריקה", flag: "🇿🇦" }, { name: "כף ורדה", flag: "🇨🇻" },
+    { name: "קמרון", flag: "🇨🇲" },
+    // אסיה
+    { name: "יפן", flag: "🇯🇵" }, { name: "דרום קוריאה", flag: "🇰🇷" }, { name: "אוסטרליה", flag: "🇦🇺" },
+    { name: "איראן", flag: "🇮🇷" }, { name: "ערב הסעודית", flag: "🇸🇦" }, { name: "קטאר", flag: "🇶🇦" },
+    { name: "ירדן", flag: "🇯🇴" }, { name: "אוזבקיסטן", flag: "🇺🇿" },
+    // CONCACAF
+    { name: "האיטי", flag: "🇭🇹" }, { name: "פנמה", flag: "🇵🇦" }, { name: "קוראסאו", flag: "🇨🇼" },
+    // אוקיאניה
+    { name: "ניו זילנד", flag: "🇳🇿" },
+    // פלייאוף
+    { name: "עיראק", flag: "🇮🇶" },
+    { name: "קונגו", flag: "🇨🇩" }
+].sort((a, b) => a.name.localeCompare(b.name, 'he'));
+
+// ===== שחקנים - 30 המועמדים הטובים ביותר למלך שערים =====
+const playersList = [
+    { name: "קיליאן אמבפה", flag: "🇫🇷", club: "ריאל מדריד" },
+    { name: "הארי קיין", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", club: "באיירן מינכן" },
+    { name: "ארלינג הולאנד", flag: "🇳🇴", club: "מנצ'סטר סיטי" },
+    { name: "ליאונל מסי", flag: "🇦🇷", club: "אינטר מיאמי" },
+    { name: "ויניסיוס ז'וניור", flag: "🇧🇷", club: "ריאל מדריד" },
+    { name: "כריסטיאנו רונאלדו", flag: "🇵🇹", club: "אל-נאסר" },
+    { name: "לאמין ימאל", flag: "🇪🇸", club: "ברצלונה" },
+    { name: "רוברט לבנדובסקי", flag: "🇵🇱", club: "ברצלונה" },
+    { name: "ג'וד בלינגהאם", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", club: "ריאל מדריד" },
+    { name: "ויקטור גיוקרס", flag: "🇸🇪", club: "ספורטינג" },
+    { name: "ראפיניה", flag: "🇧🇷", club: "ברצלונה" },
+    { name: "מרקוס ראשפורד", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", club: "ברצלונה" },
+    { name: "אנטואן גריזמן", flag: "🇫🇷", club: "אטלטיקו מדריד" },
+    { name: "פיל פודן", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", club: "מנצ'סטר סיטי" },
+    { name: "חוליאן אלבארז", flag: "🇦🇷", club: "אטלטיקו מדריד" },
+    { name: "מוחמד סאלח", flag: "🇪🇬", club: "ליברפול" },
+    { name: "אוסמן דמבלה", flag: "🇫🇷", club: "פריז סן ז'רמן" },
+    
+    { name: "בראדלי ברקולה", flag: "🇫🇷", club: "פריז סן ז'רמן" },
+    { name: "מיקל אויארזבל", flag: "🇪🇸", club: "ריאל סוסיאדד" },
+    { name: "ניימאר", flag: "🇧🇷", club: "אל הילאל" },
+    { name: "רודריגו", flag: "🇧🇷", club: "ריאל מדריד" },
+    { name: "גאברי מרטינז", flag: "🇧🇷", club: "ברצלונה" },
+    { name: "לוטארו מרטינז", flag: "🇦🇷", club: "אינטר מילאן" },
+    
+    { name: "פולארין בלוגון", flag: "🇺🇸", club: "AS מונקו" },
+    { name: "פרדי הולון", flag: "🇺🇸", club: "בוס'י" },
+    { name: "אחרף חקימי", flag: "🇲🇦", club: "פריז סן ז'רמן" },
+    { name: "בדיה שיפו", flag: "🇨🇮", club: "צ'לסי" },
+    
+];
+
+const obSteps = [
+    { title:"שיטת הניקוד ⚽", desc:"תוצאה מדויקת = נקודות מלאות | כיוון נכון = חצי נקודות", mock:`<div style="text-align:center"><div style="font-size:22px;color:var(--accent);font-weight:900">+3 נקודות! 🔥</div><div style="font-size:11px;color:var(--muted);margin-top:4px">תוצאה מדויקת בשלב הבתים</div></div>` },
+    { title:"הבוטים שלנו 🤖", desc:"הקוף (רנדומלי) והינשוף מתחרים בכל קבוצה!", mock:`<div style="display:flex;flex-direction:column;gap:4px;width:100%;font-size:11px"><div style="display:flex;justify-content:space-between;background:#1F2C3F;padding:6px;border-radius:8px"><span>🦉 הינשוף</span><strong style="color:var(--accent)">14 נק'</strong></div><div style="display:flex;justify-content:space-between;background:#1F2C3F;padding:6px;border-radius:8px"><span>🐒 הקוף</span><strong style="color:var(--gold)">9 נק'</strong></div></div>` },
+    { title:"💎 קרדיטים להמלצות", desc:"רכוש קרדיט אחד לפתיחת ניתוח AI מלא וחוכמת המונים לכל משחק.", mock:`<div style="width:100%;display:flex;flex-direction:column;gap:4px;text-align:right;"><div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,200,55,0.1);border:1px solid rgba(255,200,55,0.35);border-radius:7px;padding:3px 8px;"><span style="font-size:8px;color:var(--gold);font-weight:800;">💎 פרימיום</span><span style="font-size:8px;color:var(--gold);">1 קרדיט לפתיחה</span></div><div style="background:rgba(100,100,255,0.1);border:1px solid rgba(100,100,255,0.3);border-radius:7px;padding:5px 7px;"><div style="font-size:7.5px;color:#a78bfa;font-weight:700;margin-bottom:2px;">🤖 ניתוח AI</div><div style="font-size:7.5px;color:#E2E8F0;line-height:1.4;">ברזיל מגיעה אחרי 4 ניצחונות עם הגנה חזקה ועייפות נמוכה. ארגנטינה ללא מסי — צפויה גישה סגורה. יתרון זמן מנוחה לברזיל.</div><div style="margin-top:3px;padding-top:3px;border-top:1px solid rgba(255,255,255,0.08);font-size:7.5px;font-weight:700;color:#FFF;">⚽ תחזית: 2-1 לברזיל</div></div><div style="background:rgba(0,255,157,0.06);border:1px solid rgba(0,255,157,0.2);border-radius:7px;padding:5px 7px;"><div style="font-size:7.5px;color:#00FF9D;font-weight:700;margin-bottom:1px;">📊 חוכמת ההמונים</div><div style="font-size:7.5px;color:#FFF;">76% לברזיל | 14% תיקו | 10% לארגנטינה</div><div style="font-size:7.5px;color:#FFF;">תוצאה נפוצה: <strong>2-1</strong></div></div></div>` }
+];
+let obStep = 0;
+
+// ===== AUTH =====
+async function deleteGroup(event, code) {
+    event.stopPropagation();
+    const confirmed = await showConfirmModal('יציאה מקבוצה', 'האם אתה בטוח שברצונך לצאת?', 'פעולה זו אינה הפיכה', 'צא 🚪', 'ביטול');
+    if (!confirmed) return;
+    const { error } = await sb.from('user_groups').delete().eq('user_id', UID).eq('group_code', code);
+    if (error) { alert('שגיאה: ' + error.message); return; }
+    if (activeGroupCode === code) activeGroupCode = null;
+    myGroups = myGroups.filter(g => g.group_code !== code);
+    if (myGroups.length > 0 && !myGroups.find(g => g.is_main)) {
+        await sb.from('user_groups').update({ is_main: true }).eq('user_id', UID).eq('group_code', myGroups[0].group_code);
+        myGroups[0].is_main = true;
+    }
+    showSuccess('🚪', 'יצאת מהקבוצה');
+    loadGroups();
+}
+
+async function logoutUser() {
+    await sb.auth.signOut();
+    UID = null;
+    userCredits = 0;
+    myGroups = [];
+    activeGroupCode = null;
+    unlockedMatches = [];
+    closeModal('modal-settings');
+    document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function loginWithGoogle() {
+    document.getElementById('btn-google').innerText = 'מתחבר...';
+    
+    const { error } = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin + window.location.pathname,
+            queryParams: { prompt: 'select_account' },
+            skipBrowserRedirect: false
+        }
+    });
+    
+    if (error) {
+        alert('שגיאה: ' + error.message);
+        document.getElementById('btn-google').innerText = 'התחברות באמצעות Google';
+    }
+}
+
+async function loadMatchesFromDB() {
+    try {
+        const { data, error } = await sb.from('matches')
+            .select('*')
+            .order('date', { ascending: true })
+            .order('time', { ascending: true });
+        
+        if (error || !data || data.length === 0) return false;
+        
+        const HE_NAMES = {
+            'Mexico': 'מקסיקו', 'South Africa': 'דרום אפריקה', 'Korea Republic': 'דרום קוריאה',
+            'Czechia': "צ'כיה", 'Canada': 'קנדה', 'Bosnia and Herzegovina': 'בוסניה והרצגובינה',
+            'USA': 'ארה"ב', 'United States': 'ארה"ב', 'Paraguay': 'פרגוואי',
+            'Qatar': 'קטאר', 'Switzerland': 'שוויץ', 'Brazil': 'ברזיל', 'Morocco': 'מרוקו',
+            'Haiti': 'האיטי', 'Scotland': 'סקוטלנד', 'Australia': 'אוסטרליה', 'Turkey': 'טורקיה',
+            'Germany': 'גרמניה', 'Netherlands': 'הולנד', 'Japan': 'יפן',
+            "Côte d'Ivoire": 'חוף השנהב', 'Ivory Coast': 'חוף השנהב',
+            'Ecuador': 'אקוודור', 'Sweden': 'שבדיה', 'Tunisia': 'תוניסיה',
+            'Spain': 'ספרד', 'Belgium': 'בלגיה', 'Egypt': 'מצרים',
+            'Saudi Arabia': 'ערב הסעודית', 'Uruguay': 'אורוגוואי', 'Iran': 'איראן',
+            'New Zealand': 'ניו זילנד', 'France': 'צרפת', 'Senegal': 'סנגל',
+            'Iraq': 'עיראק', 'Norway': 'נורווגיה', 'Argentina': 'ארגנטינה',
+            'Austria': 'אוסטריה', 'Jordan': 'ירדן', 'England': 'אנגליה',
+            'Portugal': 'פורטוגל', 'Croatia': 'קרואטיה', 'Colombia': 'קולומביה',
+            'Ghana': 'גאנה', 'Cameroon': 'קמרון', 'Panama': 'פנמה',
+            'Serbia': 'סרביה', 'Denmark': 'דנמרק', 'Poland': 'פולין',
+            'Ukraine': 'אוקראינה', 'South Korea': 'דרום קוריאה',
+            'Cape Verde': 'כף ורדה', 'Cabo Verde': 'כף ורדה', 'Cape Verde Islands': 'כף ורדה',
+            'Honduras': 'הונדורס', 'Costa Rica': 'קוסטה ריקה', 'Congo DR': 'קונגו',
+            'Indonesia': 'אינדונזיה', 'Uzbekistan': 'אוזבקיסטן', 'China PR': 'סין',
+        };
+        
+        const fixName = (name) => {
+            if (!name || name === 'null') return null;
+            return HE_NAMES[name] || name;
+        };
+        
+        matches = data
+            .map(m => ({
+                id: m.id,
+                group: m.group_name || 'שלב הבתים',
+                home: fixName(m.home),
+                away: fixName(m.away),
+                date: m.date,
+                time: m.time,
+                stage: m.stage || 'group',
+                ai: m.owl_prediction || '',
+                ai_text: m.ai_text || '',
+                ai_analysis: m.ai_analysis || '',
+                baseHome: 1.5, baseAway: 1.0, basePct: 55, homeWin: null,
+                status: m.status,
+                home_score: m.home_score,
+                away_score: m.away_score
+            }))
+            .filter(m => m.home && m.away && m.home !== 'null' && m.away !== 'null')
+            .sort((a, b) => {
+                const [da, ma] = (a.date || '01/01').split('/').map(Number);
+                const [db, mb] = (b.date || '01/01').split('/').map(Number);
+                if (ma !== mb) return ma - mb;
+                if (da !== db) return da - db;
+                return (a.time || '00:00').localeCompare(b.time || '00:00');
+            });
+        
+        console.log(`Loaded ${matches.length} matches from DB`);
+        return true;
+    } catch(e) {
+        console.error('Error loading matches:', e);
+        return false;
+    }
+}
+
+async function initApp() {
+    // טען משחקים מה-DB
+    await loadMatchesFromDB();
+    renderMatches('home-matches', true);
+    renderMatches('pred-matches', false);
+
+    // הסתר מסך לוגין אם חוזרים מגוגל
+    const isReturningFromOAuth = window.location.hash.includes('access_token=') || 
+                                  window.location.search.includes('code=');
+    if (isReturningFromOAuth) {
+        document.getElementById('login-screen').style.display = 'none';
+    }
+
+    // המאזין הראשי - תופס שינויי auth
+    sb.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth event:', event, !!session);
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+            if (!UID) await openDashboard(session);
+        } else if (event === 'SIGNED_OUT') {
+            UID = null;
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+    });
+
+    // גיבוי - בדיקה ישירה אחרי שהדפדפן מעבד את ה-OAuth
+    setTimeout(async () => {
+        if (UID) return; // כבר טופל
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user) {
+            await openDashboard(session);
+        } else if (!isReturningFromOAuth) {
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+    }, 1500); // 1.5 שניות - מספיק זמן למובייל לעבד
+}
+
+async function openDashboard(session) {
+    if (UID) return; // מניעת כפילות
+    UID = session.user.id;
+    document.getElementById('login-screen').style.display = 'none';
+    window.history.replaceState({}, '', window.location.pathname);
+
+    const invite = new URLSearchParams(window.location.search).get('invite');
+    if (invite) await joinGroup(invite);
+
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', UID).single();
+
+    if (!profile) {
+        await sb.from('profiles').insert({ id: UID, nickname: session.user.user_metadata?.full_name || '', username: session.user.email || '', total_score: 0, credits_balance: 1 });
+        document.getElementById('input-new-nickname').value = session.user.user_metadata?.full_name || '';
+        openModal('modal-new-nickname');
+    } else {
+        userCredits = profile.credits_balance || 0;
+        updateCreditsBadge();
+        if (profile.champion_team) {
+            document.getElementById('champ-team-name').innerText = profile.champion_team;
+            const t = teamsList.find(t => t.name === profile.champion_team);
+            if (t) document.getElementById('champ-team-flag').innerHTML = `<span style="font-size:24px">${t.flag}</span>`;
+        }
+        if (profile.top_scorer) document.getElementById('champ-scorer-name').innerText = profile.top_scorer;
+    }
+
+    document.getElementById('my-score-val').innerText = (profile?.total_score || 0) + " נק'";
+    await loadUnlocked();
+    loadGroups();
+    loadPredictions();
+}
+
+// ===== PROFILE =====
+async function saveNewNickname() {
+    const name = document.getElementById('input-new-nickname').value.trim();
+    if (!name) return;
+    await sb.from('profiles').update({ nickname: name, username: name }).eq('id', UID);
+    closeModal('modal-new-nickname');
+    showSuccess('🎉', 'ברוך הבא!');
+    loadGroups();
+}
+
+async function openSettings() {
+    const { data } = await sb.from('profiles').select('nickname').eq('id', UID).single();
+    document.getElementById('input-edit-nickname').value = data?.nickname || '';
+    // load notif settings
+    const saved = JSON.parse(localStorage.getItem('notif_' + UID) || '{}');
+    notifSettings = { reminder: saved.reminder || false, ranking: saved.ranking || false };
+    document.getElementById('toggle-reminder').className = 'toggle' + (notifSettings.reminder ? ' on' : '');
+    document.getElementById('toggle-ranking').className = 'toggle' + (notifSettings.ranking ? ' on' : '');
+    openModal('modal-settings');
+}
+
+async function saveEditNickname() {
+    const name = document.getElementById('input-edit-nickname').value.trim();
+    if (!name) return;
+    await sb.from('profiles').update({ nickname: name, username: name }).eq('id', UID);
+    closeModal('modal-settings');
+    showSuccess('✅', 'השם עודכן');
+    loadGroups();
+}
+
+function toggleNotif(type) {
+    notifSettings[type] = !notifSettings[type];
+    document.getElementById('toggle-' + type).className = 'toggle' + (notifSettings[type] ? ' on' : '');
+    localStorage.setItem('notif_' + UID, JSON.stringify(notifSettings));
+}
+
+// ===== בוט קוף - ניחושים רנדומליים =====
+// מזהה קבוע לקוף (user_id וירטואלי)
+const BOT_MONKEY_ID = 'bot-monkey';
+const BOT_OWL_ID = 'bot-owl';
+
+async function generateMonkeyPredictions() {
+    // מייצר ניחושים רנדומליים 0-5 לכל משחק עבור הקוף
+    for (const match of matches) {
+        const h = Math.floor(Math.random() * 6);
+        const a = Math.floor(Math.random() * 6);
+        await sb.from('bot_predictions').upsert(
+            { bot_id: BOT_MONKEY_ID, match_id: match.id, home_score: h, away_score: a },
+            { onConflict: 'bot_id,match_id' }
+        );
+    }
+    showSuccess('🐒', 'הקוף ניחש!');
+}
+
+async function getBotScores() {
+    const { data: monkey } = await sb.from('bot_scores').select('total_score').eq('bot_id', BOT_MONKEY_ID).single();
+    const { data: owl } = await sb.from('bot_scores').select('total_score').eq('bot_id', BOT_OWL_ID).single();
+    return {
+        monkey: monkey?.total_score || 0,
+        owl: owl?.total_score || 0
+    };
+}
+
+// ===== GROUPS =====
+async function loadGroups() {
+    const container = document.getElementById('groups-list');
+    container.innerHTML = '';
+
+    const { data: memberships } = await sb.from('user_groups').select('group_code, is_main').eq('user_id', UID);
+    myGroups = memberships || [];
+
+    if (myGroups.length === 0) {
+        container.innerHTML = `<p style="text-align:center;font-size:12px;color:var(--muted);padding:20px;">אין קבוצות עדיין — צור אחת!</p>`;
+        updateRankDisplay(null);
+        return;
+    }
+
+    // קבוצה ראשית
+    const mainGroup = myGroups.find(g => g.is_main) || myGroups[0];
+    if (!activeGroupCode) activeGroupCode = mainGroup.group_code;
+
+    for (const m of myGroups) {
+        const { data: grp } = await sb.from('groups').select('name').eq('code', m.group_code).single();
+        if (!grp) continue;
+
+        const isActive = m.group_code === activeGroupCode;
+        const card = document.createElement('div');
+        card.className = 'group-card' + (isActive ? ' active' : '');
+        card.style.cssText = isActive ? 'border-color:var(--accent);border-radius:16px 16px 0 0;margin-bottom:0;border-bottom:none;' : '';
+        card.innerHTML = `
+            <div class="group-card-header">
+                <span class="group-card-name">🛡️ ${grp.name}</span>
+                <div style="display:flex;gap:4px;align-items:center">
+                    ${m.is_main ? `<span class="main-tag">ראשית</span>` : `<button class="btn-set-main" onclick="setMain(event,\'${m.group_code}\')">🎯 קבע כראשית</button>`}
+                    <button class="btn-delete-group" onclick="deleteGroup(event,\'${m.group_code}\')">יציאה מהקבוצה</button>
+                </div>
+            </div>
+            <div class="invite-row" onclick="shareInvite(event,\'${m.group_code}\')">
+                <span>הזמן חברים</span>
+                <button class="invite-copy-btn">📤 שתף</button>
+            </div>
+        `;
+        card.onclick = (e) => { if (!e.target.closest('.invite-row') && !e.target.closest('.btn-set-main') && !e.target.closest('.btn-delete-group')) toggleLeaderboard(m.group_code, card, grp.name); };
+        container.appendChild(card);
+
+        if (isActive) {
+            const lb = document.createElement('div');
+            lb.id = 'lb-' + m.group_code;
+            lb.style.cssText = 'background:var(--card);border:1px solid var(--accent);border-top:none;border-radius:0 0 16px 16px;padding:8px 12px 12px;margin-bottom:12px;';
+            container.appendChild(lb);
+            renderLeaderboard(m.group_code, lb, grp.name);
+        }
+    }
+
+    // עדכן מיקום בבית
+    updateRankDisplay(activeGroupCode);
+}
+
+async function toggleLeaderboard(code, card, name) {
+    const existing = document.getElementById('lb-' + code);
+    if (existing) {
+        existing.remove();
+        card.style.cssText = '';
+        card.classList.remove('active');
+        activeGroupCode = null;
+        updateRankDisplay(null);
+        return;
+    }
+    // סגור קודמים
+    document.querySelectorAll('.group-card').forEach(c => { c.classList.remove('active'); c.style.cssText = ''; });
+    document.querySelectorAll('[id^="lb-"]').forEach(el => el.remove());
+
+    activeGroupCode = code;
+    card.classList.add('active');
+    card.style.cssText = 'border-color:var(--accent);border-radius:16px 16px 0 0;margin-bottom:0;border-bottom:none;';
+
+    const lb = document.createElement('div');
+    lb.id = 'lb-' + code;
+    lb.style.cssText = 'background:var(--card);border:1px solid var(--accent);border-top:none;border-radius:0 0 16px 16px;padding:8px 12px 12px;margin-bottom:12px;';
+    card.insertAdjacentElement('afterend', lb);
+    renderLeaderboard(code, lb, name);
+    updateRankDisplay(code);
+}
+
+async function renderLeaderboard(code, container, groupName) {
+    container.innerHTML = `
+        <div style="background:var(--card);border:1px solid var(--accent);border-radius:0 0 16px 16px;padding:8px;margin-bottom:12px;" id="lb-inner-${code}">
+            <p style="text-align:center;font-size:11px;color:var(--muted);padding:8px;">טוען...</p>
+        </div>`;
+
+    try {
+        // שלוף כל חברי הקבוצה
+        const { data: members } = await sb.from('user_groups')
+            .select('user_id')
+            .eq('group_code', code);
+        
+        const userIds = (members || []).map(m => m.user_id);
+        
+        // שלוף פרופילים וניקוד
+        const { data: profiles } = await sb.from('profiles')
+            .select('id, nickname, total_score')
+            .in('id', userIds.length > 0 ? userIds : ['none']);
+
+        const botScores = await getBotScores();
+
+        // בנה רשימת שחקנים
+        let ranking = (profiles || []).map(p => ({
+            name: (p.nickname || 'משתמש') + (p.id === UID ? ' ⭐' : ''),
+            score: p.total_score || 0,
+            isMe: p.id === UID
+        }));
+
+        // הוסף בוטים
+        ranking.push({ name: '🦉 הינשוף', score: botScores.owl, isMe: false });
+        ranking.push({ name: '🐒 הקוף', score: botScores.monkey, isMe: false });
+
+        ranking.sort((a, b) => b.score - a.score);
+
+        const innerContainer = document.getElementById('lb-inner-' + code);
+        innerContainer.innerHTML = '';
+
+        ranking.forEach((p, i) => {
+            const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            if (p.isMe) document.getElementById('my-rank-val').innerText = i + 1;
+            const row = document.createElement('div');
+            row.className = 'player-row' + (p.isMe ? ' me' : '');
+            row.innerHTML = `
+                <div class="player-info">
+                    <span class="rank-num ${rankClass}">${i + 1}</span>
+                    <span class="player-name">${p.name}</span>
+                </div>
+                <span class="player-score">${p.score} נק'</span>
+            `;
+            innerContainer.appendChild(row);
+        });
+    } catch(e) {
+        console.error('Leaderboard error:', e);
+    }
+}
+
+async function updateRankDisplay(code) {
+    if (!code) { document.getElementById('my-rank-val').innerText = '-'; return; }
+    const { data: profile } = await sb.from('profiles').select('total_score').eq('id', UID).single();
+    const myScore = profile?.total_score || 0;
+    // סימולציה פשוטה - בעתיד יחושב מהDB
+    document.getElementById('my-rank-val').innerText = myScore >= 10 ? '1' : myScore >= 5 ? '2' : '3';
+}
+
+async function setMain(event, code) {
+    event.stopPropagation();
+    await sb.from('user_groups').update({ is_main: false }).eq('user_id', UID);
+    await sb.from('user_groups').update({ is_main: true }).eq('user_id', UID).eq('group_code', code);
+    activeGroupCode = code;
+    loadGroups();
+}
+
+async function createGroup() {
+    const name = document.getElementById('input-group-name').value.trim();
+    if (!name) return;
+    const code = 'grp-' + Math.random().toString(36).substring(2, 9);
+    const isFirst = myGroups.length === 0;
+    const { error: e1 } = await sb.from('groups').insert({ code, name });
+    if (e1) { alert('שגיאה: ' + e1.message); return; }
+    const { error: e2 } = await sb.from('user_groups').insert({ user_id: UID, group_code: code, is_main: isFirst });
+    if (e2) { alert('שגיאה: ' + e2.message); return; }
+    activeGroupCode = code;
+    document.getElementById('input-group-name').value = '';
+    closeModal('modal-create-group');
+    showSuccess('🛡️', 'קבוצה נוצרה!');
+    loadGroups();
+}
+
+async function joinGroup(code) {
+    await sb.from('user_groups').upsert({ user_id: UID, group_code: code }, { onConflict: 'user_id,group_code' });
+    window.history.replaceState({}, '', window.location.pathname);
+    activeGroupCode = code;
+}
+
+function copyInvite(event, code) {
+    event.stopPropagation();
+    navigator.clipboard.writeText(`${APP_URL}?invite=${code}`).then(() => showSuccess('🔗', 'קישור הועתק!'));
+}
+
+function shareInvite(event, code) {
+    event.stopPropagation();
+    const url = `${APP_URL}?invite=${code}`;
+    const text = `הצטרף אליי לניחושי המונדיאל 2026! 🏆⚽\n${url}`;
+    if (navigator.share) {
+        navigator.share({ title: 'World Cup 2026', text: text, url: url })
+            .catch(() => navigator.clipboard.writeText(url).then(() => showSuccess('🔗', 'קישור הועתק!')));
+    } else {
+        navigator.clipboard.writeText(url)
+            .then(() => showSuccess('🔗', 'קישור הועתק!'))
+            .catch(() => prompt('העתק את הקישור:', url));
+    }
+}
+
+// ===== MATCHES =====
+function renderMatches(containerId, todayOnly, stageFilter = 'group') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    const stageMatches = matches.filter(m => m.stage === stageFilter);
+    const list = todayOnly 
+        ? stageMatches.filter(m => m.date === '11/06' || m.date === '12/06')
+        : stageMatches;
+    list.forEach(m => {
+        const isUnlocked = unlockedMatches.includes(m.id);
+        const lockIcon = isUnlocked ? '✅' : '💡';
+        const prefix = todayOnly ? 'h' : 'p';
+        const card = document.createElement('div');
+        card.className = 'match-card';
+        card.innerHTML = `
+            <div class="match-meta">
+                <span class="group-tag">${m.group}</span>
+                <span class="match-time-badge">${m.date} • ${m.time}</span>
+                <button class="btn-vip" onclick="handleVip('${m.id}','${prefix}')">${lockIcon}</button>
+            </div>
+            <div class="match-row">
+                <div class="team-col"><span class="team-name">${m.home}</span></div>
+                <div class="score-box" id="${prefix}-h-${m.id}" onclick="openNum('${prefix}-h-${m.id}')">-</div>
+                <span style="color:var(--muted);font-weight:700">:</span>
+                <div class="score-box" id="${prefix}-a-${m.id}" onclick="openNum('${prefix}-a-${m.id}')">-</div>
+                <div class="team-col"><span class="team-name">${m.away}</span></div>
+            </div>
+            ${isMatchLocked(m) 
+                ? `<div style="display:flex;gap:6px;margin-top:12px;">
+                     <div style="flex:1;padding:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:12px;font-size:11px;color:var(--muted);text-align:center;">🔒 הימור נסגר</div>
+                     ${UID === ADMIN_UID ? `<button style="padding:8px 12px;background:rgba(255,200,55,0.1);border:1px solid rgba(255,200,55,0.3);color:var(--gold);border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;" onclick="openResultModal('${m.id}')">⚽ הזן תוצאה</button>` : ''}
+                   </div>`
+                : `<button class="btn-lock-pred" onclick="savePrediction('${m.id}','${prefix}')">שמור ✅</button>`
+            }
+            <div class="vip-box" id="vip-${prefix}-${m.id}"></div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function isMatchLocked(match) {
+    // בדוק אם המשחק כבר התחיל לפי תאריך ושעה
+    const now = new Date();
+    const [day, month] = match.date.split('/').map(Number);
+    const [hour, min] = match.time.split(':').map(Number);
+    const matchTime = new Date(2026, month - 1, day, hour, min);
+    return now >= matchTime;
+}
+
+async function savePrediction(matchId, prefix) {
+    const match = matches.find(m => m.id === matchId);
+    if (match && isMatchLocked(match)) {
+        alert('⏰ ההימור נסגר — המשחק כבר התחיל!');
+        return;
+    }
+    const h = document.getElementById(`${prefix}-h-${matchId}`).innerText;
+    const a = document.getElementById(`${prefix}-a-${matchId}`).innerText;
+    if (h === '-' || a === '-') { alert('בחר תוצאה תחילה!'); return; }
+    const { error } = await sb.from('predictions').upsert(
+        { user_id: UID, match_id: matchId, home_score: parseInt(h), away_score: parseInt(a) },
+        { onConflict: 'user_id,match_id' }
+    );
+    if (error) { alert('שגיאה בשמירה: ' + error.message); return; }
+    showSuccess('🎯', 'הימור ננעל!');
+    const other = prefix === 'h' ? 'p' : 'h';
+    const oh = document.getElementById(`${other}-h-${matchId}`);
+    const oa = document.getElementById(`${other}-a-${matchId}`);
+    if (oh) oh.innerText = h; if (oa) oa.innerText = a;
+}
+
+async function loadPredictions() {
+    const { data } = await sb.from('predictions').select('*').eq('user_id', UID);
+    if (!data) return;
+    data.forEach(pred => {
+        ['h', 'p'].forEach(pfx => {
+            const h = document.getElementById(`${pfx}-h-${pred.match_id}`);
+            const a = document.getElementById(`${pfx}-a-${pred.match_id}`);
+            if (h && pred.home_score !== null) h.innerText = pred.home_score;
+            if (a && pred.away_score !== null) a.innerText = pred.away_score;
+        });
+    });
+}
+
+async function loadUnlocked() {
+    const { data } = await sb.from('predictions').select('match_id').eq('user_id', UID).eq('vip_unlocked', true);
+    if (data) unlockedMatches = data.map(d => d.match_id);
+}
+
+// ===== VIP - חוכמת ההמונים המשופרת =====
+function canPurchaseVip(match) {
+    // מצא את שלושת המשחקים הראשונים כרונולוגית
+    const sorted = [...matches].sort((a, b) => {
+        const [da, ma] = (a.date || '01/01').split('/').map(Number);
+        const [db, mb] = (b.date || '01/01').split('/').map(Number);
+        const ta = new Date(2026, ma-1, da, ...((a.time||'00:00').split(':').map(Number)));
+        const tb = new Date(2026, mb-1, db, ...((b.time||'00:00').split(':').map(Number)));
+        return ta - tb;
+    });
+    const firstThree = sorted.slice(0, 3).map(m => m.id);
+    
+    // שלושת הראשונים תמיד פתוחים
+    if (firstThree.includes(match.id)) return true;
+    
+    // שאר המשחקים - רק יותר מ-48 שעות לפני
+    const [day, month] = (match.date || '').split('/').map(Number);
+    const [hour, min] = (match.time || '00:00').split(':').map(Number);
+    const matchTime = new Date(2026, month - 1, day, hour, min);
+    const hoursLeft = (matchTime - new Date()) / (1000 * 60 * 60);
+    return hoursLeft > 48;
+}
+
+async function handleVip(matchId, prefix) {
+    const box = document.getElementById(`vip-${prefix}-${matchId}`);
+    if (!box || !UID) return;
+    if (box.style.display === 'block') { box.style.display = 'none'; return; }
+    const match = matches.find(m => m.id === matchId);
+    const isUnlocked = unlockedMatches.includes(matchId);
+
+    if (isUnlocked) { renderVip(box, match, prefix); return; }
+
+    // בדוק אם אפשר לרכוש
+    if (!canPurchaseVip(match)) {
+        alert('⏰ הרכישה נסגרה — לא ניתן לקנות המלצה פחות מ-48 שעות לפני המשחק');
+        return;
+    }
+
+    if (userCredits > 0) {
+        const confirmed = await showConfirmModal('💡 פתיחת המלצה', `פתיחת המלצת AI למשחק זה`, `יתרה: ${userCredits} קרדיטים | עלות: 1 קרדיט`, 'פתח 💡', 'ביטול');
+        if (!confirmed) return;
+        userCredits--;
+        updateCreditsBadge();
+        unlockedMatches.push(matchId);
+        await sb.from('profiles').update({ credits_balance: userCredits }).eq('id', UID);
+        await sb.from('predictions').upsert({ user_id: UID, match_id: matchId, vip_unlocked: true }, { onConflict: 'user_id,match_id' });
+        ['h', 'p'].forEach(pfx => { const b = document.getElementById(`vip-${pfx}-${matchId}`); if (b) b.querySelector && null; });
+        renderVip(box, match, prefix);
+    } else {
+        openModal('modal-shop');
+    }
+}
+
+async function renderVip(box, match, prefix) {
+    box.style.display = 'block';
+    box.innerHTML = `<span style="color:var(--muted);font-size:11px;">⏳ טוען המלצות...</span>`;
+
+    // ===== חוכמת ההמונים האמיתית מה-DB =====
+    let crowdHtml = '';
+    try {
+        // רק ניחושי משתמשים אמיתיים (לא בוטים)
+        const { data: allPreds } = await sb.from('predictions')
+            .select('home_score, away_score, user_id')
+            .eq('match_id', match.id)
+            .not('home_score', 'is', null)
+            .not('away_score', 'is', null)
+            .not('user_id', 'in', '("00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000002")');
+
+        if (allPreds && allPreds.length >= 3) {
+            // שלב 1: ספור כיוונים
+            let homeWins = 0, draws = 0, awayWins = 0;
+            allPreds.forEach(p => {
+                if (p.home_score > p.away_score) homeWins++;
+                else if (p.home_score === p.away_score) draws++;
+                else awayWins++;
+            });
+            const total = allPreds.length;
+
+            // שלב 2: מצא כיוון מנצח
+            let winnerDir, winnerName, winnerPct, filteredPreds;
+            if (homeWins >= awayWins && homeWins >= draws) {
+                winnerDir = 'home'; winnerName = match.home;
+                winnerPct = Math.round((homeWins / total) * 100);
+                filteredPreds = allPreds.filter(p => p.home_score > p.away_score);
+            } else if (awayWins >= homeWins && awayWins >= draws) {
+                winnerDir = 'away'; winnerName = match.away;
+                winnerPct = Math.round((awayWins / total) * 100);
+                filteredPreds = allPreds.filter(p => p.away_score > p.home_score);
+            } else {
+                winnerDir = 'draw'; winnerName = 'תיקו';
+                winnerPct = Math.round((draws / total) * 100);
+                filteredPreds = allPreds.filter(p => p.home_score === p.away_score);
+            }
+
+            // שלב 3: מצא תוצאה הכי שכיחה מתוך הכיוון המנצח
+            const resultCount = {};
+            filteredPreds.forEach(p => {
+                const key = `${p.home_score}-${p.away_score}`;
+                resultCount[key] = (resultCount[key] || 0) + 1;
+            });
+            const popularResult = Object.entries(resultCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+
+            crowdHtml = `📊 <strong>חוכמת ההמונים (${total} ניחושים):</strong> ${winnerPct}% ל${winnerName} | תוצאה נפוצה: <strong>${popularResult}</strong>`;
+        } else {
+            crowdHtml = `📊 <strong>חוכמת ההמונים:</strong> יתעדכן בקרוב`;
+        }
+    } catch(e) {
+        crowdHtml = `📊 <strong>חוכמת ההמונים:</strong> שגיאה בטעינה`;
+    }
+
+    // שלוף AI analysis מה-DB
+    let aiHtml = '';
+    try {
+        const { data: matchData } = await sb.from('matches')
+            .select('ai_analysis, owl_prediction')
+            .eq('id', match.id)
+            .single();
+        
+        if (matchData?.ai_analysis) {
+            const lines = matchData.ai_analysis.split('\n')
+                .map(l => l.trim())
+                .filter(l => {
+                    if (!l || l.length < 4) return false;
+                    if (/^\[.+\]/.test(l)) return false;
+                    if (/^#{1,3}\s/.test(l)) return false;
+                    if (/^(עדכונים|תחזית|ניתוח|סיכום|הערה|שים לב)\s*:?\s*$/i.test(l)) return false;
+                    if (/^תוצאה צפויה:/i.test(l)) return false;
+                    if (/^תחזית:/i.test(l)) return false;
+                    if (/להשגת|זקוק|בזמן אמת|מידע עדכני|אין לי גישה|לא ניתן|אינני יכול|אין באפשרותי|נכון ל|נתונים עדכניים/i.test(l)) return false;
+                    return true;
+                })
+                .map(l => l.replace(/^[•\-\*\d\.]+\s*/, '').trim())
+                .filter(l => l.length > 3);
+            const combinedText = lines.join(' ');
+            const forecast = matchData.owl_prediction || '';
+
+            aiHtml = `
+                <div style="background:rgba(100,100,255,0.06);border:1px solid rgba(100,100,255,0.2);border-radius:12px;padding:12px;margin-bottom:10px;">
+                    <div style="font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:8px;">🤖 ניתוח AI</div>
+                    <div style="font-size:12px;color:#E2E8F0;line-height:1.8;">${combinedText}</div>
+                    ${forecast ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);font-size:13px;font-weight:700;color:#FFF;">⚽ ${forecast}</div>` : ''}
+                </div>`;
+        } else {
+            aiHtml = `<div style="background:rgba(100,100,255,0.06);border:1px solid rgba(100,100,255,0.2);border-radius:12px;padding:12px;margin-bottom:10px;text-align:center;">
+                <div style="font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:4px;">🤖 המלצת AI</div>
+                <div style="font-size:12px;color:var(--muted);">הניתוח עדיין לא זמין</div>
+            </div>`;
+        }
+    } catch(e) {
+        aiHtml = '';
+    }
+
+    // הצג בפופאפ
+    const vipModal = document.getElementById('vip-modal-content');
+    if (vipModal) {
+        const crowdText = crowdHtml
+            .replace('📊 <strong>חוכמת ההמונים:</strong> ', '')
+            .replace(/📊 <strong>חוכמת ההמונים \(\d+ ניחושים\):<\/strong> /, '');
+        
+        vipModal.innerHTML = `
+            ${aiHtml}
+            <div style="background:rgba(0,255,157,0.05);border:1px solid rgba(0,255,157,0.15);border-radius:12px;padding:12px;">
+                <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">📊 חוכמת ההמונים</div>
+                <div style="font-size:13px;color:#FFF;">${crowdText}</div>
+            </div>
+        `;
+        openModal('modal-vip');
+    }
+    box.style.display = 'none';
+}
+
+// ===== הזנת תוצאות וחישוב ניקוד =====
+let currentResultMatchId = null;
+
+function openResultModal(matchId) {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+    currentResultMatchId = matchId;
+    document.getElementById('result-match-label').innerText = `${match.home} נגד ${match.away} • ${match.date}`;
+    document.getElementById('result-home-label').innerText = match.home;
+    document.getElementById('result-away-label').innerText = match.away;
+    document.getElementById('result-home-score').value = '';
+    document.getElementById('result-away-score').value = '';
+    openModal('modal-result');
+}
+
+async function submitFinalResult() {
+    const homeScore = parseInt(document.getElementById('result-home-score').value);
+    const awayScore = parseInt(document.getElementById('result-away-score').value);
+    if (isNaN(homeScore) || isNaN(awayScore)) { alert('הזן תוצאה תקינה'); return; }
+
+    const matchId = currentResultMatchId;
+    const match = matches.find(m => m.id === matchId);
+
+    // קבע כיוון אמיתי
+    const actualDir = homeScore > awayScore ? 'home' : homeScore < awayScore ? 'away' : 'draw';
+
+    // שלוף את כל הניחושים למשחק זה
+    const { data: preds } = await sb.from('predictions')
+        .select('user_id, home_score, away_score, points_earned')
+        .eq('match_id', matchId)
+        .not('home_score', 'is', null);
+
+    if (!preds || preds.length === 0) {
+        closeModal('modal-result');
+        showSuccess('✅', 'תוצאה נשמרה (אין ניחושים)');
+        return;
+    }
+
+    // חשב נקודות לכל משתמש
+    const stage = match.stage || 'group';
+    const exactPoints = { group: 3, '16': 4, '8': 5, '4': 8, final: 10 }[stage] || 3;
+    const dirPoints = { group: 1, '16': 2, '8': 3, '4': 4, final: 5 }[stage] || 1;
+
+    for (const pred of preds) {
+        const predDir = pred.home_score > pred.away_score ? 'home' : pred.home_score < pred.away_score ? 'away' : 'draw';
+        let pts = 0;
+        if (pred.home_score === homeScore && pred.away_score === awayScore) pts = exactPoints;
+        else if (predDir === actualDir) pts = dirPoints;
+
+        if (pts > 0) {
+            // עדכן predictions
+            await sb.from('predictions')
+                .update({ points_earned: pts })
+                .eq('user_id', pred.user_id)
+                .eq('match_id', matchId);
+
+            // עדכן total_score בפרופיל
+            const { data: profile } = await sb.from('profiles').select('total_score').eq('id', pred.user_id).single();
+            const newScore = (profile?.total_score || 0) + pts;
+            await sb.from('profiles').update({ total_score: newScore }).eq('id', pred.user_id);
+        }
+    }
+
+    // חשב ניקוד לבוטים
+    const { data: botPreds } = await sb.from('bot_predictions')
+        .select('bot_id, home_score, away_score')
+        .eq('match_id', matchId)
+        .not('home_score', 'is', null);
+
+    if (botPreds) {
+        for (const bp of botPreds) {
+            const predDir = bp.home_score > bp.away_score ? 'home' : bp.home_score < bp.away_score ? 'away' : 'draw';
+            let pts = 0;
+            if (bp.home_score === homeScore && bp.away_score === awayScore) pts = exactPoints;
+            else if (predDir === actualDir) pts = dirPoints;
+            if (pts > 0) {
+                const { data: bs } = await sb.from('bot_scores').select('total_score').eq('bot_id', bp.bot_id).single();
+                await sb.from('bot_scores').update({ total_score: (bs?.total_score || 0) + pts }).eq('bot_id', bp.bot_id);
+            }
+        }
+    }
+
+    // שמור תוצאה סופית
+    await sb.from('match_results').upsert(
+        { match_id: matchId, home_score: homeScore, away_score: awayScore, updated_at: new Date().toISOString() },
+        { onConflict: 'match_id' }
+    );
+
+    closeModal('modal-result');
+    showSuccess('🏆', `תוצאה עודכנה! ${preds.length} ניחושים חושבו`);
+
+    // רענן את המסך
+    if (UID) {
+        const { data: myProfile } = await sb.from('profiles').select('total_score').eq('id', UID).single();
+        document.getElementById('my-score-val').innerText = (myProfile?.total_score || 0) + " נק'";
+    }
+}
+
+// ===== בוט ינשוף - הזנה ידנית =====
+function openOwlModal() {
+    // בנה רשימת משחקים לבחירה
+    let html = '<select id="owl-match-select" class="app-input" style="margin-bottom:12px;">';
+    matches.forEach(m => {
+        html += `<option value="${m.id}">${m.date} • ${m.home} נגד ${m.away}</option>`;
+    });
+    html += '</select>';
+    html += '<div style="display:flex;gap:12px;align-items:center;justify-content:center;margin:12px 0;">';
+    html += '<input type="number" id="owl-home" min="0" max="20" placeholder="0" style="width:60px;padding:10px;background:#0D1420;border:1px solid var(--border);border-radius:10px;color:#FFF;font-size:20px;font-weight:700;text-align:center;">';
+    html += '<span style="color:var(--muted);font-size:20px;">:</span>';
+    html += '<input type="number" id="owl-away" min="0" max="20" placeholder="0" style="width:60px;padding:10px;background:#0D1420;border:1px solid var(--border);border-radius:10px;color:#FFF;font-size:20px;font-weight:700;text-align:center;">';
+    html += '</div>';
+    
+    const modal = document.getElementById('modal-result');
+    document.getElementById('result-match-label').innerHTML = html;
+    document.getElementById('result-home-label').style.display = 'none';
+    document.getElementById('result-away-label').style.display = 'none';
+    document.getElementById('result-home-score').style.display = 'none';
+    document.getElementById('result-away-score').style.display = 'none';
+    document.querySelector('#modal-result .modal-title').innerText = '🦉 ניחוש ינשוף';
+    document.querySelector('#modal-result .btn-primary').innerText = 'שמור ניחוש ינשוף';
+    document.querySelector('#modal-result .btn-primary').onclick = saveOwlPrediction;
+    openModal('modal-result');
+    closeModal('modal-settings');
+}
+
+async function saveOwlPrediction() {
+    const matchId = document.getElementById('owl-match-select')?.value;
+    const h = parseInt(document.getElementById('owl-home')?.value);
+    const a = parseInt(document.getElementById('owl-away')?.value);
+    if (!matchId || isNaN(h) || isNaN(a)) { alert('מלא את כל השדות'); return; }
+    await sb.from('bot_predictions').upsert(
+        { bot_id: BOT_OWL_ID, match_id: matchId, home_score: h, away_score: a },
+        { onConflict: 'bot_id,match_id' }
+    );
+    closeModal('modal-result');
+    // reset modal
+    document.querySelector('#modal-result .modal-title').innerText = '⚽ הזן תוצאה סופית';
+    document.querySelector('#modal-result .btn-primary').onclick = submitFinalResult;
+    document.querySelector('#modal-result .btn-primary').innerText = 'עדכן תוצאה וחשב נקודות 🏆';
+    showSuccess('🦉', 'ניחוש ינשוף נשמר!');
+}
+
+// ===== STAGE FILTER =====
+function switchStage(stage) {
+    currentStage = stage;
+    document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('rbtn-' + stage).classList.add('active');
+    const container = document.getElementById('pred-matches');
+    const title = document.getElementById('pred-stage-title');
+    if (stage !== 'group') {
+        if (title) title.innerText = '';
+        const stageNames = { '16': 'שמינית גמר', '8': 'רבע גמר', '4': 'חצי גמר', '2': 'הגמר' };
+        const stageMatches = matches.filter(m => m.stage === stage);
+        if (stageMatches.length > 0) {
+            renderMatches('pred-matches', false, stage);
+            loadPredictions();
+        } else {
+            container.innerHTML = `<div style="text-align:center;padding:40px;">
+                <div style="font-size:32px;margin-bottom:12px;">⏳</div>
+                <p style="font-size:14px;font-weight:700;color:#FFF;margin-bottom:6px;">${stageNames[stage] || 'שלב זה'}</p>
+                <p style="font-size:12px;color:var(--muted);">המשחקים ייקבעו לאחר סיום שלב הבתים</p>
+            </div>`;
+        }
+    } else {
+        if (title) title.innerText = 'משחקי שלב הבתים:';
+        renderMatches('pred-matches', false, 'group');
+        loadPredictions();
+    }
+}
+
+// ===== CHAMPIONS =====
+function openTeams() {
+    const container = document.getElementById('teams-list');
+    container.innerHTML = '';
+    teamsList.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'selection-item';
+        const flagUrl = getFlagUrl(t.name);
+        const flagHtml = flagUrl
+            ? `<img src="${flagUrl}" style="width:28px;height:20px;object-fit:cover;border-radius:3px;flex-shrink:0;">`
+            : `<span style="font-size:20px">${t.flag}</span>`;
+        item.innerHTML = `${flagHtml}<span>${t.name}</span>`;
+        item.onclick = () => {
+            document.getElementById('champ-team-name').innerText = t.name;
+            const flagEl = document.getElementById('champ-team-flag');
+            flagEl.innerHTML = '';
+            if (flagUrl) {
+                const img = document.createElement('img');
+                img.src = flagUrl;
+                img.style.cssText = 'width:36px;height:26px;object-fit:cover;border-radius:4px;';
+                flagEl.appendChild(img);
+            } else {
+                const s = document.createElement('span');
+                s.style.cssText = 'font-size:26px;line-height:1';
+                s.textContent = t.flag;
+                flagEl.appendChild(s);
+            }
+            closeModal('modal-teams');
+        };
+        container.appendChild(item);
+    });
+    openModal('modal-teams');
+}
+
+function openScorers() {
+    const container = document.getElementById('scorers-list');
+    container.innerHTML = '';
+    playersList.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'selection-item';
+        const emojiToCode = {
+            '🏴󠁧󠁢󠁥󠁮󠁧󠁿':'gb-eng','🇫🇷':'fr','🇧🇷':'br','🇦🇷':'ar',
+            '🇵🇹':'pt','🇪🇸':'es','🇵🇱':'pl','🇳🇴':'no',
+            '🇸🇪':'se','🇺🇸':'us','🇲🇦':'ma','🇨🇮':'ci',
+            '🇪🇬':'eg','🇩🇪':'de','🇳🇱':'nl','🇦🇹':'at',
+        };
+        const flagCode = emojiToCode[p.flag];
+        const pFlagHtml = flagCode
+            ? `<img src="https://flagcdn.com/w40/${flagCode}.png" style="width:32px;height:22px;object-fit:cover;border-radius:3px;flex-shrink:0;">`
+            : `<div style="width:32px;height:22px;background:#1F2C3F;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;">${p.flag}</div>`;
+        item.innerHTML = `${pFlagHtml}<div><div style="font-weight:700;font-size:13px">${p.name}</div><div style="font-size:11px;color:var(--muted)">${p.club}</div></div>`;
+        item.onclick = () => {
+            document.getElementById('champ-scorer-name').innerText = p.name;
+            const imgEl = document.getElementById('champ-scorer-img');
+            imgEl.innerHTML = '';
+            const s = document.createElement('span');
+            s.style.fontSize = '22px';
+            s.textContent = p.flag;
+            imgEl.appendChild(s);
+            closeModal('modal-scorers');
+        };
+        container.appendChild(item);
+    });
+    openModal('modal-scorers');
+}
+
+async function saveChampion(event, type) {
+    if (!UID) return;
+    event.stopPropagation();
+    const data = type === 'team'
+        ? { champion_team: document.getElementById('champ-team-name').innerText }
+        : { top_scorer: document.getElementById('champ-scorer-name').innerText };
+    await sb.from('profiles').update(data).eq('id', UID);
+    showSuccess('🎯', 'הימור ננעל!');
+}
+
+// ===== ONBOARDING =====
+function startOnboarding() { document.getElementById('onboarding-screen').style.display = 'flex'; obStep = 0; renderObStep(); }
+function renderObStep() {
+    const s = obSteps[obStep];
+    document.getElementById('ob-content').innerHTML = `<h3 style="font-size:18px;font-weight:800">${s.title}</h3><p style="font-size:13px;color:var(--muted);line-height:1.4;max-width:310px">${s.desc}</p><div class="ob-mock">${s.mock}</div>`;
+    const dots = document.getElementById('ob-dots'); dots.innerHTML = '';
+    obSteps.forEach((_, i) => { const d = document.createElement('div'); d.className = 'dot' + (i === obStep ? ' active' : ''); dots.appendChild(d); });
+    document.getElementById('btn-ob-next').innerText = obStep === obSteps.length - 1 ? 'הבנתי! ⚽' : 'הבא ➡️';
+}
+function nextObStep() { if (obStep < obSteps.length - 1) { obStep++; renderObStep(); } else finishOnboarding(); }
+function finishOnboarding() { document.getElementById('onboarding-screen').style.display = 'none'; }
+
+// ===== UI HELPERS =====
+function switchTab(name) {
+    ['home','predictions','groups'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === name);
+        document.getElementById('nav-' + t).classList.toggle('active', t === name);
+    });
+    if (name === 'groups') loadGroups();
+    if (name === 'predictions') { renderMatches('pred-matches', false); loadPredictions(); }
+    if (name === 'home') { renderMatches('home-matches', true); loadPredictions(); }
+}
+
+function openNum(boxId) { activeScoreBox = boxId; openModal('modal-num'); }
+function pickNum(val) { if (activeScoreBox) document.getElementById(activeScoreBox).innerText = val; closeModal('modal-num'); }
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+    if (id === 'modal-shop') resetPayPalUI();
+}
+// ===== PayPal =====
+let selectedCredits = 0;
+let selectedAmount = 0;
+let paypalButtonInstance = null;
+
+async function startStripeCheckout(amount, credits) {
+    selectedAmount = amount;
+    selectedCredits = credits;
+
+    const container = document.getElementById('paypal-button-container');
+    const status = document.getElementById('paypal-status');
+    const cancelBtn = document.getElementById('paypal-cancel-btn');
+
+    status.style.display = 'block';
+    cancelBtn.style.display = 'block';
+    status.innerText = `✅ בחרת: ${credits === 999 ? '∞ כל המונדיאל' : credits + ' קרדיטים'} — ₪${amount} | לחץ על PayPal לתשלום`;
+
+    // מחק כפתורים קיימים ויצור חדשים עם הסכום הנכון
+    container.innerHTML = '';
+    container.style.display = 'block';
+
+    try {
+        if (typeof paypal === 'undefined') {
+            container.innerHTML = '<p style="color:#ff6b6b;text-align:center;font-size:12px;">טוען PayPal...</p>';
+            return;
+        }
+        paypal.Buttons({
+            style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay', height: 40 },
+            createOrder: async () => {
+                const res = await fetch('/api/paypal/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: selectedAmount, credits: selectedCredits, userId: UID })
+                });
+                const data = await res.json();
+                if (!data.orderId) throw new Error('שגיאה ביצירת הזמנה');
+                return data.orderId;
+            },
+            onApprove: async (data) => {
+                status.innerText = '⏳ מאשר תשלום...';
+                const res = await fetch('/api/paypal/capture-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: data.orderID, userId: UID })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    userCredits = result.credits === 999 ? 9999 : userCredits + result.credits;
+                    updateCreditsBadge();
+                    closeModal('modal-shop');
+                    resetPayPalUI();
+                    showSuccess('🎉', `${result.credits === 999 ? 'קרדיטים בלתי מוגבלים' : result.credits + ' קרדיטים'} התווספו!`);
+                } else {
+                    status.innerText = '❌ שגיאה בתשלום — נסה שוב';
+                }
+            },
+            onCancel: () => { status.innerText = 'ביטלת את התשלום — אפשר לנסות שוב'; },
+            onError: (err) => {
+                console.error('PayPal error:', err);
+                status.innerText = '❌ שגיאה — רענן את הדף ונסה שוב';
+            }
+        }).render('#paypal-button-container');
+    } catch(e) {
+        container.innerHTML = '<p style="color:#ff6b6b;text-align:center;font-size:12px;">שגיאה בטעינת PayPal — רענן את הדף</p>';
+    }
+}
+
+function resetPayPalUI() {
+    const container = document.getElementById('paypal-button-container');
+    const status = document.getElementById('paypal-status');
+    const cancelBtn = document.getElementById('paypal-cancel-btn');
+    if (container) { container.innerHTML = ''; container.style.display = 'none'; }
+    if (status) { status.innerText = ''; status.style.display = 'none'; }
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    selectedAmount = 0;
+    selectedCredits = 0;
+}
+
+function showConfirmModal(title, msg, sub, okText, cancelText) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML = `
+            <div style="background:#111823;border:1px solid #1F2C3F;border-radius:20px;padding:24px;max-width:300px;width:100%;text-align:center;">
+                <div style="font-size:17px;font-weight:800;color:#FFF;margin-bottom:8px;">${title}</div>
+                <div style="font-size:13px;color:#FFF;margin-bottom:4px;">${msg}</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:20px;">${sub}</div>
+                <div style="display:flex;gap:10px;">
+                    <button id="cm-cancel" style="flex:1;padding:11px;background:rgba(255,255,255,0.05);border:1px solid #1F2C3F;border-radius:12px;color:#8F9CAE;font-size:13px;cursor:pointer;font-family:inherit;">${cancelText}</button>
+                    <button id="cm-ok" style="flex:1;padding:11px;background:var(--gold);border:none;border-radius:12px;color:#000;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">${okText}</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        overlay.querySelector('#cm-ok').onclick = () => { document.body.removeChild(overlay); resolve(true); };
+        overlay.querySelector('#cm-cancel').onclick = () => { document.body.removeChild(overlay); resolve(false); };
+    });
+}
+
+function showSuccess(emoji, title) { document.getElementById('success-emoji').innerText = emoji; document.getElementById('success-title').innerText = title; openModal('modal-success'); }
+function updateCreditsBadge() { document.getElementById('credits-badge-val').innerText = `${userCredits} קרדיטים`; }
+
+window.onload = initApp;
+</script>
+</body>
+</html>
